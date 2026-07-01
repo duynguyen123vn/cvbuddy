@@ -1,0 +1,29 @@
+slug: language
+display_name: Ngôn ngữ / Languages
+core_keywords:
+  - communication
+  - presentation
+  - cross-cultural
+red_flags:
+  - Only lists language level without any teaching/tutoring/customer context
+verticals:
+  english_center:
+    display_name: Trung tâm Anh ngữ
+    keywords:
+      - lesson planning
+      - CEFR
+      - classroom management
+      - student engagement
+      - tutoring
+    sample_bullets:
+      - "Facilitated speaking clubs for 20+ learners, improving participation in pair activities."
+  hospitality:
+    display_name: Khách sạn / Du lịch
+    keywords:
+      - guest relations
+      - front desk
+      - OTA
+      - complaint handling
+      - upselling
+    sample_bullets:
+      - "Assisted front-desk check-in for international guests during peak season."

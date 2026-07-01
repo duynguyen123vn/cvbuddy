@@ -1,0 +1,70 @@
+slug: law
+display_name: Luật / Law
+core_keywords:
+  - pháp luật
+  - legal research
+  - case analysis
+  - legal drafting
+  - compliance
+red_flags:
+  - Lists legal subjects without showing research, drafting, casework, or advisory experience
+  - Claims litigation, counsel, or compliance responsibility without evidence in the CV
+guidance:
+  - Prefer evidence from moot courts, internships, legal clinics, case research, contracts, and published work.
+  - Keep legal terminology faithful to the source and do not infer licenses or authority to practise law.
+  - Treat Vietnamese and English equivalents as the same competency when checking missing keywords.
+verticals:
+  general_law:
+    display_name: Luật / General, Civil & Criminal Law
+    keywords:
+      - luật dân sự
+      - luật hình sự
+      - luật tố tụng
+      - tư pháp
+      - bào chữa
+      - tranh tụng
+      - công chứng
+      - thừa phát lại
+      - pháp lý đại chúng
+      - hành chính công
+      - luật đất đai
+      - luật lao động
+      - soạn thảo văn bản pháp luật
+      - nghiên cứu hồ sơ
+      - tư vấn pháp luật
+      - Litigation
+      - Criminal Law
+      - Civil Law
+      - Paralegal
+      - Legal Advisor
+      - Legal Research
+      - Court Procedure
+      - Legal Drafting
+      - Public Law
+      - Labor Law
+      - Judiciary
+      - Case Analysis
+  economic_law:
+    display_name: Luật kinh tế / Economic & Commercial Law
+    keywords:
+      - luật thương mại
+      - luật doanh nghiệp
+      - tranh chấp thương mại
+      - sở hữu trí tuệ
+      - luật đầu tư
+      - mua bán và sáp nhập
+      - pháp chế doanh nghiệp
+      - luật cạnh tranh
+      - hợp đồng thương mại
+      - trọng tài thương mại
+      - luật tài chính ngân hàng
+      - Corporate Law
+      - Commercial Law
+      - Intellectual Property
+      - M&A
+      - Corporate Compliance
+      - Legal Counsel
+      - Contract Drafting
+      - Investment Law
+      - Antitrust Law
+      - Commercial Arbitration

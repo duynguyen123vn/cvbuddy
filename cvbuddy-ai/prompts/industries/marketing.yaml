@@ -1,0 +1,19 @@
+slug: marketing
+display_name: Marketing / Truyền thông
+core_keywords:
+  - campaign
+  - content
+  - social media
+  - analytics
+  - CRM
+red_flags:
+  - Lists platforms without role or outcome
+verticals:
+  default:
+    keywords:
+      - KPI
+      - engagement rate
+      - ROI
+      - stakeholder
+    sample_bullets:
+      - "Co-created Instagram content calendar for a student club, lifting engagement on key posts."

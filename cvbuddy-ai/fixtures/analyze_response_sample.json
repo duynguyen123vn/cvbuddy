@@ -1,0 +1,29 @@
+{
+  "overall_score": 68,
+  "dimensions": {
+    "layout_ats": {
+      "score": 70,
+      "issues": ["Experience section could use clearer date formatting for ATS."],
+      "fixes": ["Use MM/YYYY – MM/YYYY on one line per role."]
+    },
+    "language": {
+      "score": 65,
+      "issues": ["Some bullets use weak openings."],
+      "fixes": ["Start bullets with action verbs."]
+    },
+    "keywords": {
+      "score": 55,
+      "missing": ["KPI", "CEFR"],
+      "suggested_bullets": []
+    },
+    "jd_fit": {
+      "score": 60,
+      "gaps": ["Add lesson-related keywords if applicable."]
+    }
+  },
+  "rewrites": [],
+  "company_model_feedback": "Corporate ATS: add dates and quantify class size where possible.",
+  "confidence": 0.75,
+  "disclaimer": "AI-assisted feedback only; not a hiring guarantee.",
+  "meta": { "source": "mock" }
+}

@@ -1,0 +1,63 @@
+slug: computer_science
+display_name: Khoa học máy tính / Computer Science
+core_keywords:
+  - programming
+  - algorithms
+  - data structures
+  - software engineering
+  - Git
+  - testing
+red_flags:
+  - Lists technologies without projects, responsibilities, implementation details, or results
+  - Claims production deployment, optimization, or security expertise without source evidence
+guidance:
+  - Prefer project-backed evidence, repositories, datasets, model evaluation, security labs, and technical outcomes.
+  - Do not convert coursework or currently learning items into demonstrated professional experience.
+  - Treat Vietnamese and English equivalents as the same competency when checking missing keywords.
+verticals:
+  ai_data_science:
+    display_name: Trí tuệ nhân tạo và khoa học dữ liệu / AI & Data Science
+    keywords:
+      - học máy
+      - học sâu
+      - xử lý ngôn ngữ tự nhiên
+      - thị giác máy tính
+      - kỹ thuật dữ liệu
+      - phân tích thống kê
+      - mô hình dự báo
+      - làm sạch dữ liệu
+      - mạng nơ-ron
+      - Machine Learning
+      - Deep Learning
+      - Natural Language Processing
+      - Computer Vision
+      - Data Engineering
+      - Python
+      - R
+      - TensorFlow
+      - PyTorch
+      - Big Data
+      - Data Scraping
+      - Predictive Modeling
+  cybersecurity:
+    display_name: An ninh mạng và an toàn số / Cybersecurity & Digital Safety
+    keywords:
+      - kiểm thử xâm nhập
+      - tường lửa
+      - mã hóa dữ liệu
+      - phòng chống mã độc
+      - giám sát an ninh mạng
+      - ứng cứu sự cố
+      - kỹ nghệ đảo ngược
+      - bảo mật đám mây
+      - chứng thực số
+      - Penetration Testing
+      - Firewall
+      - Cryptography
+      - Malware Analysis
+      - Security Operations Center
+      - Ethical Hacking
+      - Reverse Engineering
+      - Cloud Security
+      - Vulnerability Assessment
+      - Identity and Access Management

@@ -1,0 +1,70 @@
+slug: ai_software
+display_name: AI / Software Engineering
+core_keywords:
+  - Python
+  - machine learning
+  - deep learning
+  - computer vision
+  - natural language processing
+  - data preprocessing
+  - model evaluation
+  - API
+  - Git
+  - deployment
+red_flags:
+  - Lists AI concepts without projects, datasets, model choices, or evaluation results
+  - Claims deployment, optimization, or production use without evidence in the source text
+  - Mentions frameworks such as TensorFlow or PyTorch only as goals instead of demonstrated experience
+  - Describes projects without the candidate's role, technical approach, or measurable result
+guidance:
+  - Prefer project-backed evidence over broad AI buzzwords.
+  - For interns/fresh graduates, value academic projects, capstone work, GitHub demos, datasets, and evaluation metrics.
+  - Do not convert missing keywords into claimed achievements; list them as missing or suggested learning areas.
+  - If no job description is provided, assess general fit for AI intern or junior software roles, not a specific vacancy.
+verticals:
+  ai_intern:
+    display_name: AI Intern / Fresher
+    keywords:
+      - Python
+      - machine learning
+      - model evaluation
+      - data preprocessing
+      - scikit-learn
+      - Git
+      - teamwork
+    sample_bullets:
+      - "Built a machine learning project in Python and documented model choices, dataset preprocessing, and evaluation results."
+  computer_vision:
+    display_name: Computer Vision
+    keywords:
+      - OpenCV
+      - image segmentation
+      - face recognition
+      - CNN
+      - preprocessing
+      - evaluation metrics
+    sample_bullets:
+      - "Developed a computer vision prototype using OpenCV and documented recognition logic, limitations, and validation results."
+  nlp:
+    display_name: Natural Language Processing
+    keywords:
+      - NLP
+      - text mining
+      - transformers
+      - tokenization
+      - classification
+      - evaluation metrics
+    sample_bullets:
+      - "Implemented a text processing workflow and evaluated model output with task-appropriate metrics."
+  backend_ai:
+    display_name: Backend / AI Application
+    keywords:
+      - Flask
+      - FastAPI
+      - API
+      - model serving
+      - web application
+      - database
+      - deployment
+    sample_bullets:
+      - "Built a web application around an AI model and exposed results through a simple backend workflow."

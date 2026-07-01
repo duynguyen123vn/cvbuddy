@@ -1,0 +1,1 @@
+"""CVBuddy AI service package."""

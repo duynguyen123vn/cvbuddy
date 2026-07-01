@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="CVBuddy - Phân tích CV theo ngành nghề" />
+    <title>CVBuddy | Phân tích CV</title>
+    <link rel="preconnect" href="http://localhost:8000" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="CVBuddy">
+        <span class="brand-mark" aria-hidden="true">CV</span>
+        <span>CVBuddy</span>
+      </a>
+      <div class="api-status" id="api-status" role="status">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="api-status-text">Đang kết nối</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="control-panel" aria-labelledby="form-title">
+        <div class="panel-heading">
+          <p class="eyebrow">PHÂN TÍCH MỚI</p>
+          <h1 id="form-title">Kiểm tra CV</h1>
+        </div>
+
+        <form id="analysis-form">
+          <div class="field-group">
+            <label for="cv-file">Tệp CV</label>
+            <label class="file-drop" id="file-drop" for="cv-file">
+              <input id="cv-file" name="file" type="file" accept=".pdf,.docx" required />
+              <span class="upload-icon" aria-hidden="true">↑</span>
+              <span class="file-drop-title" id="file-drop-title">Chọn PDF hoặc DOCX</span>
+              <span class="file-drop-meta" id="file-drop-meta">Tối đa 10 MB</span>
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label for="industry">Nhóm ngành</label>
+            <select id="industry" name="industry_slug" required disabled>
+              <option value="">Đang tải danh sách...</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label for="vertical">Chuyên ngành</label>
+            <select id="vertical" name="vertical_slug" required disabled>
+              <option value="">Chọn nhóm ngành trước</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label for="extract-model">Model trích xuất</label>
+              <select id="extract-model" name="extract_model" required disabled>
+                <option value="">Đang tải...</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="analyze-model">Model phân tích</label>
+              <select id="analyze-model" name="analyze_model" required disabled>
+                <option value="">Đang tải...</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset class="field-group">
+            <legend>Môi trường ứng tuyển</legend>
+            <div class="segmented-control">
+              <label>
+                <input type="radio" name="company_model" value="corporate" checked />
+                <span>Doanh nghiệp</span>
+              </label>
+              <label>
+                <input type="radio" name="company_model" value="startup_agency" />
+                <span>Startup / Agency</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label for="language">Bản CV</label>
+              <select id="language" name="target_language">
+                <option value="auto">Tự động</option>
+                <option value="vi">Tiếng Việt</option>
+                <option value="en">Tiếng Anh</option>
+                <option value="both">Song ngữ</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="mode">Bộ trích xuất</label>
+              <select id="mode" name="mode">
+                <option value="hybrid">Hybrid</option>
+                <option value="ai">AI</option>
+                <option value="local">Local</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="primary-button" id="submit-button" type="submit" disabled>
+            <span id="submit-label">Phân tích CV</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+        </form>
+      </aside>
+
+      <section class="result-panel" aria-live="polite">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-visual" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <h2>Chưa có kết quả phân tích</h2>
+          <p>Kết quả ATS và đề xuất chỉnh sửa sẽ xuất hiện tại đây.</p>
+        </div>
+
+        <div class="loading-state" id="loading-state" hidden>
+          <div class="loader" aria-hidden="true"></div>
+          <h2>Đang đọc CV</h2>
+          <p id="loading-message">Đang trích xuất và đối chiếu nội dung...</p>
+        </div>
+
+        <div class="error-state" id="error-state" hidden>
+          <div class="error-symbol" aria-hidden="true">!</div>
+          <h2>Không thể phân tích CV</h2>
+          <p id="error-message"></p>
+          <button class="secondary-button" id="retry-button" type="button">Thử lại</button>
+        </div>
+
+        <div class="analysis-results" id="analysis-results" hidden>
+          <div class="result-header">
+            <div>
+              <p class="eyebrow">KẾT QUẢ PHÂN TÍCH</p>
+              <h2>Độ phù hợp của CV</h2>
+              <p class="result-meta" id="result-meta"></p>
+            </div>
+            <div class="score-gauge" id="score-gauge" aria-label="Điểm tổng thể">
+              <strong id="overall-score">0</strong>
+              <span>/ 100</span>
+            </div>
+          </div>
+
+          <div class="feedback-band">
+            <span class="feedback-label">Nhận xét</span>
+            <p id="company-feedback"></p>
+          </div>
+
+          <section class="extraction-section" id="extraction-section">
+            <div class="section-heading">
+              <h3>Thông tin đã trích xuất</h3>
+              <span id="coverage-badge"></span>
+            </div>
+            <div class="coverage-grid" id="coverage-grid"></div>
+            <div class="extracted-content" id="extracted-content"></div>
+          </section>
+
+          <div class="section-heading">
+            <h3>Chi tiết đánh giá</h3>
+            <span id="confidence-badge"></span>
+          </div>
+          <div class="dimensions-grid" id="dimensions-grid"></div>
+
+          <div class="rewrites-section" id="rewrites-section">
+            <div class="section-heading">
+              <h3>Đề xuất chỉnh sửa</h3>
+              <span id="rewrite-count"></span>
+            </div>
+            <div class="rewrite-list" id="rewrite-list"></div>
+          </div>
+
+          <p class="disclaimer" id="disclaimer"></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="./config.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

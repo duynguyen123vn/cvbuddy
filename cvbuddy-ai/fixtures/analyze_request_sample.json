@@ -1,0 +1,23 @@
+{
+  "sections": {
+    "summary": ["Sinh viên năm 3 ngành Ngôn ngữ Anh, mong muốn thực tập tại trung tâm Anh ngữ."],
+    "experience": [
+      "Hỗ trợ giảng viên trong lớp giao tiếp, sửa bài tập cho 15 học viên.",
+      "Tham gia club English Speaking mỗi tuần."
+    ],
+    "education": ["Đại học XYZ — Ngôn ngữ Anh (2022–2026)"],
+    "skills": ["Office", "Presentation", "Teamwork"],
+    "projects": [],
+    "certifications": ["IELTS 6.5"],
+    "other": []
+  },
+  "industry_slug": "language",
+  "vertical_slug": "english_center",
+  "company_model": "corporate",
+  "jd_extract": {
+    "role_title": "Teaching Assistant Intern",
+    "required_keywords": ["lesson", "student", "communication"]
+  },
+  "language": "both",
+  "tier": "free"
+}
