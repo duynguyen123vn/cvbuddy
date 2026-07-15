@@ -30,13 +30,8 @@ async def run_ai_extract_sections(
     target_language: str = "auto",
     llm_model: str | None = None,
 ) -> CvSections:
-    """Parse extracted text into CvSections with the configured LLM provider."""
-    selected_model = llm_model
-    if selected_model is None:
-        if settings.llm_provider == "ollama":
-            selected_model = settings.ollama_extract_model
-        elif settings.llm_provider == "groq":
-            selected_model = settings.groq_extract_model
+    """Parse extracted text into CvSections with Groq Qwen."""
+    selected_model = llm_model or settings.groq_extract_model
     service = get_llm_service(model_name=selected_model)
     if service.use_mock:
         return split_into_sections(normalized_text)

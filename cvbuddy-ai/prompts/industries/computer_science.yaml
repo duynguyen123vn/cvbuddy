@@ -1,44 +1,86 @@
 slug: computer_science
-display_name: Khoa học máy tính / Computer Science
+display_name: Công nghệ thông tin / Computer Science & IT
 core_keywords:
+  - lập trình
+  - thuật toán
+  - cấu trúc dữ liệu
+  - kỹ thuật phần mềm
+  - cơ sở dữ liệu
+  - kiểm thử
   - programming
   - algorithms
   - data structures
   - software engineering
+  - database
   - Git
   - testing
 red_flags:
   - Lists technologies without projects, responsibilities, implementation details, or results
   - Claims production deployment, optimization, or security expertise without source evidence
 guidance:
-  - Prefer project-backed evidence, repositories, datasets, model evaluation, security labs, and technical outcomes.
+  - Prefer project-backed evidence, repositories, architecture decisions, database design, testing, deployment, and technical outcomes.
   - Do not convert coursework or currently learning items into demonstrated professional experience.
   - Treat Vietnamese and English equivalents as the same competency when checking missing keywords.
+  - AI-specific CVs should use the AI / Software Engineering group unless the target is a general IT role.
 verticals:
-  ai_data_science:
-    display_name: Trí tuệ nhân tạo và khoa học dữ liệu / AI & Data Science
+  software_engineering:
+    display_name: Kỹ thuật phần mềm / Software Engineering
     keywords:
-      - học máy
-      - học sâu
-      - xử lý ngôn ngữ tự nhiên
-      - thị giác máy tính
+      - kỹ thuật phần mềm
+      - lập trình hướng đối tượng
+      - phân tích yêu cầu
+      - thiết kế phần mềm
+      - kiểm thử phần mềm
+      - Software Engineering
+      - Object-Oriented Programming
+      - Requirements Analysis
+      - Software Design
+      - Unit Testing
+      - Git
+      - Agile
+      - UML
+  web_development:
+    display_name: Phát triển Web / Web Development
+    keywords:
+      - phát triển web
+      - HTML
+      - CSS
+      - JavaScript
+      - React
+      - Vue
+      - Node.js
+      - REST API
+      - frontend
+      - backend
+      - responsive design
+      - database
+  mobile_development:
+    display_name: Phát triển ứng dụng di động / Mobile Development
+    keywords:
+      - phát triển ứng dụng di động
+      - Android
+      - iOS
+      - Flutter
+      - React Native
+      - Kotlin
+      - Swift
+      - mobile UI
+      - API integration
+      - app deployment
+  data_engineering:
+    display_name: Kỹ thuật dữ liệu / Data Engineering
+    keywords:
       - kỹ thuật dữ liệu
-      - phân tích thống kê
-      - mô hình dự báo
-      - làm sạch dữ liệu
-      - mạng nơ-ron
-      - Machine Learning
-      - Deep Learning
-      - Natural Language Processing
-      - Computer Vision
-      - Data Engineering
+      - cơ sở dữ liệu
+      - SQL
+      - ETL
+      - data pipeline
+      - data warehouse
+      - data modeling
       - Python
-      - R
-      - TensorFlow
-      - PyTorch
       - Big Data
-      - Data Scraping
-      - Predictive Modeling
+      - Airflow
+      - Spark
   cybersecurity:
     display_name: An ninh mạng và an toàn số / Cybersecurity & Digital Safety
     keywords:
@@ -61,3 +103,31 @@ verticals:
       - Cloud Security
       - Vulnerability Assessment
       - Identity and Access Management
+  information_systems:
+    display_name: Hệ thống thông tin / Information Systems
+    keywords:
+      - hệ thống thông tin
+      - phân tích nghiệp vụ
+      - cơ sở dữ liệu
+      - ERP
+      - CRM
+      - Business Analysis
+      - Information Systems
+      - Database Design
+      - SQL
+      - System Analysis
+      - Requirement Gathering
+  cloud_devops:
+    display_name: Cloud / DevOps
+    keywords:
+      - điện toán đám mây
+      - triển khai
+      - CI/CD
+      - Docker
+      - Kubernetes
+      - Linux
+      - cloud computing
+      - DevOps
+      - deployment
+      - monitoring
+      - infrastructure

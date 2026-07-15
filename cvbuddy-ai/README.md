@@ -8,7 +8,6 @@ FastAPI service for lossless CV extraction, structured analysis, translation, an
 - FastAPI and Pydantic v2
 - PyMuPDF/python-docx for document extraction
 - Groq with separate Qwen models for extraction and analysis
-- Optional Ollama fallback
 
 ## Start
 
@@ -38,16 +37,8 @@ GROQ_API_KEY=
 GROQ_MODEL=qwen/qwen3.6-27b
 GROQ_EXTRACT_MODEL=qwen/qwen3-32b
 GROQ_ANALYZE_MODEL=qwen/qwen3.6-27b
+GROQ_FALLBACK_MODEL=qwen/qwen3-32b
 MOCK_LLM=false
-```
-
-Optional local fallback:
-
-```env
-LLM_PROVIDER=ollama
-OLLAMA_BASE_URL=http://127.0.0.1:11434
-OLLAMA_EXTRACT_MODEL=qwen3.5:4b
-OLLAMA_ANALYZE_MODEL=qwen3:8b
 ```
 
 API keys remain in the backend `.env`; never expose them to the frontend.
@@ -68,7 +59,7 @@ Extraction modes:
 
 - `local`: deterministic section rules only.
 - `hybrid`: local rules with AI parsing for weak/multi-column results.
-- `ai`: always use the configured AI provider for section parsing.
+- `ai`: always use Groq Qwen for section parsing.
 
 The web UI uses `POST /v1/cv/extract` followed by `POST /v1/cv/analyze`.
 
@@ -93,11 +84,11 @@ See [docs/AI_CONTRACT.md](docs/AI_CONTRACT.md) for integration contracts.
 .venv-codex\Scripts\python.exe -m pytest
 ```
 
-Tests force mock mode and never call Ollama or Groq.
+Tests force mock mode and never call Groq.
 
 ## Docker
 
-The compose service exposes the API at port `8001` and connects to Ollama on the Windows/macOS host through `host.docker.internal`.
+The compose service exposes the API at port `8001` and reads Groq configuration from `.env`.
 
 ```powershell
 docker compose up --build

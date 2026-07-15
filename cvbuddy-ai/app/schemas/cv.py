@@ -21,15 +21,8 @@ class UserTier(StrEnum):
 
 
 class LlmModel(StrEnum):
-    LLAMA_3_3_70B = "llama-3.3-70b-versatile"
     QWEN_3_6_27B = "qwen/qwen3.6-27b"
     QWEN_3_32B = "qwen/qwen3-32b"
-    LLAMA_4_SCOUT = "meta-llama/llama-4-scout-17b-16e-instruct"
-    QWEN3_8B_LOCAL = "qwen3:8b"
-    LLAMA3_1_8B_LOCAL = "llama3.1:8b"
-    GEMMA3_4B_LOCAL = "gemma3:4b"
-    QWEN3_5_4B_LOCAL = "qwen3.5:4b"
-    QWEN3_5_9B_LOCAL = "qwen3.5:9b"
 
 
 class CvSections(BaseModel):
@@ -116,11 +109,11 @@ class AnalyzeCvRequest(BaseModel):
     """Contract: web/Node sends after local extract (or AI service extract in phase A)."""
 
     sections: CvSections
-    industry_slug: str = Field(..., examples=["marketing", "language", "it_basic"])
+    industry_slug: str = Field(..., examples=["marketing", "language", "computer_science"])
     vertical_slug: str | None = Field(
         None,
-        description="Sub-industry context, e.g. english_center vs hospitality",
-        examples=["english_center", "hospitality"],
+        description="Sub-industry context, e.g. english_language vs hospitality_management",
+        examples=["english_language", "hospitality_management"],
     )
     company_model: CompanyModel = CompanyModel.CORPORATE
     jd_extract: JdExtract | None = None
@@ -184,5 +177,5 @@ class AnalyzeCvResponse(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     disclaimer: str = "AI-assisted feedback only; not a hiring guarantee."
     meta: dict[str, str] = Field(
-        default_factory=lambda: {"source": "ollama"}
+        default_factory=lambda: {"source": "groq"}
     )

@@ -29,5 +29,5 @@ async def run_translate(
     return TranslateResponse(
         translated=raw.get("translated", ""),
         notes=raw.get("notes", []),
-        meta={"source": getattr(service, "provider_name", "ollama")},
+        meta={"source": getattr(service, "provider_name", "groq")},
     )

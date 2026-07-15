@@ -21,6 +21,57 @@ _DATE_PREFIX = re.compile(
     re.I,
 )
 _LINK = re.compile(r"(?:https?://|www\.|linkedin\.com|github\.com)\S+", re.I)
+_CONTACT = re.compile(
+    r"(?:\[EMAIL\]|\[PHONE\]|@|\+?\d[\d\s().-]{5,}|"
+    r"https?://|www\.|linkedin\.com|github\.com)",
+    re.I,
+)
+_NAME_LABEL = re.compile(r"^(?:họ\s*tên|ho\s*ten|full\s*name|name)\s*[:\-]\s*", re.I)
+_TITLE_WORDS = re.compile(
+    r"\b(intern|fresher|student|engineer|developer|designer|analyst|"
+    r"marketer|accountant|translator|interpreter|teacher|manager|"
+    r"thực\s*tập|sinh\s*viên|kỹ\s*sư|nhân\s*viên|chuyên\s*viên|"
+    r"biên\s*phiên\s*dịch|giáo\s*viên)\b",
+    re.I,
+)
+_REJECT_PERSONAL_WORDS = re.compile(
+    r"\b(male|female|nam|nữ|ward|district|city|province|street|address|"
+    r"phường|quận|huyện|thành\s*phố|tỉnh|địa\s*chỉ|"
+    r"career|objective|education|experience|skill|project|certificate|"
+    r"mục\s*tiêu|học\s*vấn|kinh\s*nghiệm|kỹ\s*năng|dự\s*án|chứng\s*chỉ)\b",
+    re.I,
+)
+_COMMON_VIETNAMESE_SURNAMES = {
+    "nguyễn",
+    "tran",
+    "trần",
+    "le",
+    "lê",
+    "pham",
+    "phạm",
+    "hoang",
+    "hoàng",
+    "huynh",
+    "huỳnh",
+    "phan",
+    "vu",
+    "vũ",
+    "vo",
+    "võ",
+    "dang",
+    "đặng",
+    "bui",
+    "bùi",
+    "do",
+    "đỗ",
+    "ngo",
+    "ngô",
+    "duong",
+    "dương",
+    "ly",
+    "lý",
+}
+_VIETNAMESE_MARKS = re.compile(r"[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]", re.I)
 _LANGUAGE = re.compile(
     r"\b(english|vietnamese|japanese|korean|chinese|french|ielts|toeic|toefl|cefr|"
     r"tiếng anh|tiếng việt|tiếng nhật|tiếng hàn|tiếng trung|tiếng pháp)\b",
@@ -134,15 +185,88 @@ def _record(raw_text: str, blocks: list[CvSourceBlock]) -> CvStructuredRecord:
 
 
 def _personal_info(items: list[str]) -> dict[str, list[str]]:
+    name = _pick_name(items)
+    title = _pick_title(items, name)
     result: dict[str, list[str]] = {"contact": [], "links": [], "other": []}
+    if name:
+        result["name"] = [name]
+    if title:
+        result["title"] = [title]
     for item in items:
-        if "[EMAIL]" in item or "[PHONE]" in item:
-            result["contact"].append(item)
-        elif _LINK.search(item):
+        if item in {name, title}:
+            continue
+        if _LINK.search(item):
             result["links"].append(item)
+        elif "[EMAIL]" in item or "[PHONE]" in item or _CONTACT.search(item):
+            result["contact"].append(item)
         else:
             result["other"].append(item)
     return {key: values for key, values in result.items() if values}
+
+
+def _pick_name(items: list[str]) -> str | None:
+    scored: list[tuple[int, int, str]] = []
+    for index, item in enumerate(items[:16]):
+        candidate = _clean_name_candidate(item)
+        score = _name_score(candidate)
+        if score <= 0:
+            continue
+        scored.append((score, -index, candidate))
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    return scored[0][2]
+
+
+def _pick_title(items: list[str], name: str | None) -> str | None:
+    for item in items[:16]:
+        value = item.strip()
+        if not value or value == name:
+            continue
+        if len(value) <= 70 and _TITLE_WORDS.search(value) and not _CONTACT.search(value):
+            return value
+    return None
+
+
+def _clean_name_candidate(value: str) -> str:
+    candidate = _NAME_LABEL.sub("", value.strip())
+    candidate = re.sub(r"^[^\wÀ-ỹ]+|[^\wÀ-ỹ]+$", "", candidate, flags=re.UNICODE)
+    return re.sub(r"\s+", " ", candidate).strip()
+
+
+def _name_score(value: str) -> int:
+    if not value or len(value) < 4 or len(value) > 48:
+        return 0
+    if _CONTACT.search(value) or _TITLE_WORDS.search(value) or _REJECT_PERSONAL_WORDS.search(value):
+        return 0
+    if re.search(r"\d|[_/@]|[|:;]", value):
+        return 0
+
+    tokens = value.split()
+    if len(tokens) < 2 or len(tokens) > 5:
+        return 0
+    if any(len(token.strip(".-")) < 2 for token in tokens):
+        return 0
+    if not re.fullmatch(r"[A-Za-zÀ-ỹ'. -]+", value):
+        return 0
+
+    score = 10
+    first = tokens[0].casefold()
+    if first in _COMMON_VIETNAMESE_SURNAMES:
+        score += 6
+    if _VIETNAMESE_MARKS.search(value):
+        score += 3
+    title_case_tokens = sum(
+        1
+        for token in tokens
+        if token[0].isupper() or token.isupper()
+    )
+    score += title_case_tokens
+    if len(tokens) in {3, 4}:
+        score += 2
+    if value.isupper():
+        score -= 1
+    return score
 
 
 def _links(items: list[str]) -> list[str]:

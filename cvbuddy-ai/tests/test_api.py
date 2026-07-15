@@ -24,14 +24,38 @@ def test_list_industries(client: TestClient) -> None:
     response = client.get("/v1/industries")
 
     assert response.status_code == 200
-    industries = {
-        industry["slug"]: industry for industry in response.json()["industries"]
-    }
+    industry_list = response.json()["industries"]
+    industries = {industry["slug"]: industry for industry in industry_list}
+    assert [industry["slug"] for industry in industry_list] == [
+        "ai_software",
+        "computer_science",
+        "business_administration",
+        "marketing",
+        "finance_banking",
+        "hospitality_tourism",
+        "language",
+        "law",
+    ]
     assert industries["law"]["display_name"] == "Luật / Law"
     assert {vertical["slug"] for vertical in industries["law"]["verticals"]} == {
         "general_law",
         "economic_law",
     }
+    assert [vertical["slug"] for vertical in industries["business_administration"]["verticals"][:5]] == [
+        "general_business",
+        "international_business",
+        "ecommerce",
+        "customer_experience",
+        "business_analytics",
+    ]
+    assert [vertical["slug"] for vertical in industries["language"]["verticals"]] == [
+        "english_language",
+        "chinese_language",
+        "japanese_language",
+        "korean_language",
+        "translation_interpretation",
+        "language_teaching",
+    ]
     assert "cybersecurity" in {
         vertical["slug"]
         for vertical in industries["computer_science"]["verticals"]
@@ -44,12 +68,10 @@ def test_list_models(client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     model_ids = {model["id"] for model in payload["models"]}
-    assert payload["provider"] in {"groq", "ollama"}
-    if payload["provider"] == "ollama":
-        assert "qwen3:8b" in model_ids
-    else:
-        assert "qwen/qwen3.6-27b" in model_ids
-        assert "meta-llama/llama-4-scout-17b-16e-instruct" in model_ids
+    assert payload["provider"] == "groq"
+    assert "qwen/qwen3.6-27b" in model_ids
+    assert "qwen/qwen3-32b" in model_ids
+    assert all("llama" not in model_id.lower() for model_id in model_ids)
 
 
 def test_rejects_unknown_model(client: TestClient) -> None:
@@ -140,11 +162,11 @@ def test_context_matrix_builder() -> None:
     req = AnalyzeCvRequest(
         sections=CvSections(experience=["Test bullet"]),
         industry_slug="language",
-        vertical_slug="english_center",
+        vertical_slug="language_teaching",
         company_model=CompanyModel.CORPORATE,
     )
     ctx = ContextMatrixBuilder().build_for_analyze(req)
-    assert "english_center" in str(ctx.get("industry_context"))
+    assert "language_teaching" in str(ctx.get("industry_context"))
 
 
 def test_context_matrix_builder_ai_software() -> None:
@@ -170,10 +192,10 @@ def test_context_matrix_builder_ai_software() -> None:
     ("industry_slug", "vertical_slug", "expected_keyword"),
     [
         ("law", "economic_law", "Commercial Arbitration"),
-        ("business_administration", "fintech", "eKYC"),
+        ("finance_banking", "fintech", "eKYC"),
         ("business_administration", "logistics_supply_chain", "Bill of Lading"),
         ("computer_science", "cybersecurity", "Vulnerability Assessment"),
-        ("computer_science", "ai_data_science", "Predictive Modeling"),
+        ("ai_software", "machine_learning", "model evaluation"),
     ],
 )
 def test_context_matrix_builder_new_industries(

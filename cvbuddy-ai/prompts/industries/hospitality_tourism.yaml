@@ -1,0 +1,67 @@
+slug: hospitality_tourism
+display_name: Khách sạn - Du lịch / Hospitality & Tourism
+core_keywords:
+  - khách sạn
+  - du lịch
+  - dịch vụ khách hàng
+  - lễ tân
+  - lữ hành
+  - hospitality
+  - tourism
+  - guest relations
+  - customer service
+  - front office
+red_flags:
+  - Lists service traits without actual guest/customer tasks, event support, booking, front office, or travel context
+  - Claims management responsibility without source-backed role, team, shift, or operation scope
+guidance:
+  - Assess service orientation, communication, operations, guest/customer handling, and booking/travel support.
+  - Do not infer hotel, travel, or management experience unless it appears in CV sections.
+verticals:
+  hospitality_management:
+    display_name: Quản trị khách sạn / Hospitality Management
+    keywords:
+      - tiền sảnh
+      - quản lý buồng phòng
+      - dịch vụ lưu trú
+      - doanh thu khách sạn
+      - nhận phòng và trả phòng
+      - đặt phòng
+      - Front Office
+      - Housekeeping
+      - Guest Relations
+      - Property Management System
+      - Hospitality Standards
+      - Check-in/Check-out
+      - Room Reservation
+  tourism_travel:
+    display_name: Du lịch và lữ hành / Tourism & Travel Management
+    keywords:
+      - thiết kế tour
+      - hướng dẫn viên du lịch
+      - điều hành lữ hành
+      - du lịch sinh thái
+      - đại lý vé máy bay
+      - visa và hộ chiếu
+      - quản lý điểm đến
+      - Tour Operator
+      - Travel Itinerary
+      - Tour Guiding
+      - Ecotourism
+      - Destination Marketing
+      - Ticketing Agent
+      - Travel Consultant
+  restaurant_service:
+    display_name: Nhà hàng và dịch vụ F&B / Restaurant & F&B Service
+    keywords:
+      - phục vụ nhà hàng
+      - buffet
+      - đặt bàn
+      - order
+      - Food and Beverage
+      - F&B
+      - restaurant service
+      - banquet
+      - table setup
+      - customer service
+      - guest support

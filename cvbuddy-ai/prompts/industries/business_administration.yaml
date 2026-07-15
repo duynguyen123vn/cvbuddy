@@ -1,6 +1,12 @@
 slug: business_administration
 display_name: Quản trị kinh doanh / Business Administration
 core_keywords:
+  - quản trị kinh doanh
+  - chiến lược kinh doanh
+  - vận hành
+  - phát triển kinh doanh
+  - dữ liệu kinh doanh
+  - giao tiếp
   - business strategy
   - operations
   - stakeholder management
@@ -15,27 +21,25 @@ guidance:
   - Prefer measurable outcomes when present, but never invent revenue, conversion, cost, or customer metrics.
   - Treat Vietnamese and English equivalents as the same competency when checking missing keywords.
 verticals:
-  marketing:
-    display_name: Marketing
+  general_business:
+    display_name: Quản trị kinh doanh / General Business Administration
     keywords:
-      - tiếp thị kỹ thuật số
-      - nghiên cứu thị trường
-      - quản trị thương hiệu
-      - sáng tạo nội dung
-      - quảng cáo
-      - quan hệ công chúng
-      - hành vi người tiêu dùng
-      - Digital Marketing
-      - Content Creation
-      - SEO/SEM
-      - Brand Management
-      - Market Research
-      - Copywriting
-      - Public Relations
-      - Consumer Behavior
-      - Trade Marketing
-      - Performance Marketing
-      - Social Media Strategy
+      - hoạch định chiến lược
+      - khởi nghiệp
+      - phát triển kinh doanh
+      - quản trị nhân sự
+      - tối ưu hóa vận hành
+      - lãnh đạo
+      - tái cấu trúc doanh nghiệp
+      - Business Development
+      - Entrepreneurship
+      - Strategic Planning
+      - Operations Management
+      - HRM
+      - Leadership
+      - KPI Dashboard
+      - Business Model Canvas
+      - Resource Allocation
   international_business:
     display_name: Kinh doanh quốc tế / International Business
     keywords:
@@ -74,44 +78,6 @@ verticals:
       - Dropshipping
       - Omni-channel Strategy
       - Digital Retail
-  general_business:
-    display_name: Quản trị kinh doanh / General Business Administration
-    keywords:
-      - hoạch định chiến lược
-      - khởi nghiệp
-      - phát triển kinh doanh
-      - quản trị nhân sự
-      - tối ưu hóa vận hành
-      - lãnh đạo
-      - tái cấu trúc doanh nghiệp
-      - Business Development
-      - Entrepreneurship
-      - Strategic Planning
-      - Operations Management
-      - HRM
-      - Leadership
-      - KPI Dashboard
-      - Business Model Canvas
-      - Resource Allocation
-  event_management:
-    display_name: Quản trị giải trí và sự kiện / Entertainment & Event Management
-    keywords:
-      - đạo diễn sự kiện
-      - kịch bản chương trình
-      - quản lý nghệ sĩ
-      - tài trợ sự kiện
-      - điều phối hậu cần
-      - âm thanh ánh sáng
-      - bản quyền nghệ thuật
-      - Event Planning
-      - Logistics Coordination
-      - Artist Management
-      - Show Director
-      - Event Sponsoring
-      - Entertainment Production
-      - Stage Management
-      - Copyrights
-      - Booking Agent
   customer_experience:
     display_name: Quản trị trải nghiệm khách hàng / Customer Experience
     keywords:
@@ -129,55 +95,6 @@ verticals:
       - CRM Strategy
       - User Empathy
       - Customer Feedback Loop
-  procurement:
-    display_name: Quản trị thu mua / Procurement & Purchasing
-    keywords:
-      - đấu thầu
-      - đánh giá nhà cung cấp
-      - đàm phán giá
-      - hợp đồng cung ứng
-      - quản lý chi phí
-      - kiểm soát chất lượng đầu vào
-      - Procurement Management
-      - Strategic Sourcing
-      - Supplier Evaluation
-      - Vendor Negotiation
-      - Cost Reduction
-      - Purchasing Order
-      - Request for Proposal
-  hospitality:
-    display_name: Quản trị khách sạn / Hospitality Management
-    keywords:
-      - tiền sảnh
-      - quản lý buồng phòng
-      - dịch vụ lưu trú
-      - doanh thu khách sạn
-      - nhận phòng và trả phòng
-      - đặt phòng
-      - Front Office
-      - Housekeeping
-      - Guest Relations
-      - Property Management System
-      - Hospitality Standards
-      - Check-in/Check-out
-      - Room Reservation
-  tourism:
-    display_name: Quản trị dịch vụ du lịch và lữ hành / Tourism & Travel Management
-    keywords:
-      - thiết kế tour
-      - hướng dẫn viên du lịch
-      - điều hành lữ hành
-      - du lịch sinh thái
-      - đại lý vé máy bay
-      - visa và hộ chiếu
-      - quản lý điểm đến
-      - Tour Operator
-      - Travel Itinerary
-      - Tour Guiding
-      - Ecotourism
-      - Destination Marketing
-      - Ticketing Agent
-      - Travel Consultant
   business_analytics:
     display_name: Phân tích kinh doanh / Business Analytics
     keywords:
@@ -197,7 +114,7 @@ verticals:
       - Trend Analysis
       - Requirement Gathering
   logistics_supply_chain:
-    display_name: Logistics và chuỗi cung ứng toàn cầu / Logistics & Global Supply Chain
+    display_name: Logistics và chuỗi cung ứng / Logistics & Supply Chain
     keywords:
       - vận tải đa phương thức
       - quản kho
@@ -215,69 +132,37 @@ verticals:
       - Cold Chain
       - Last-mile Delivery
       - Inbound/Outbound Logistics
-  fintech:
-    display_name: Công nghệ tài chính / Fintech
+  procurement:
+    display_name: Quản trị thu mua / Procurement & Purchasing
     keywords:
-      - ví điện tử
-      - cho vay ngang hàng
-      - tiền mã hóa
-      - ngân hàng số
-      - chuỗi khối
-      - định danh điện tử
-      - thuật toán giao dịch
-      - Financial Technology
-      - Blockchain
-      - Cryptocurrency
-      - P2P Lending
-      - Digital Banking
-      - eKYC
-      - Algorithmic Trading
-      - Insurtech
-      - Mobile Payment
-  corporate_finance:
-    display_name: Tài chính doanh nghiệp / Corporate Finance
+      - đấu thầu
+      - đánh giá nhà cung cấp
+      - đàm phán giá
+      - hợp đồng cung ứng
+      - quản lý chi phí
+      - kiểm soát chất lượng đầu vào
+      - Procurement Management
+      - Strategic Sourcing
+      - Supplier Evaluation
+      - Vendor Negotiation
+      - Cost Reduction
+      - Purchasing Order
+      - Request for Proposal
+  event_management:
+    display_name: Quản trị sự kiện / Event Management
     keywords:
-      - thẩm định dự án
-      - thẩm định đầu tư
-      - cấu trúc vốn
-      - quản trị rủi ro tài chính
-      - báo cáo lưu chuyển tiền tệ
-      - huy động vốn
-      - Capital Budgeting
-      - Financial Modeling
-      - Capital Structure
-      - Cash Flow Analysis
-      - Corporate Valuation
-      - Fund Raising
-      - Risk Management
-  smart_finance:
-    display_name: Tài chính thông minh / Smart Finance
-    keywords:
-      - tài chính hành vi
-      - giao dịch tự động
-      - phân tích định lượng
-      - quản lý tài sản số
-      - tối ưu danh mục đầu tư
-      - Quantitative Finance
-      - Behavioral Finance
-      - Automated Trading
-      - Digital Asset Management
-      - Portfolio Optimization
-      - Financial Forecasting AI
-  banking_finance:
-    display_name: Tài chính ngân hàng / Banking & Finance
-    keywords:
-      - tín dụng ngân hàng
-      - thẩm định tín dụng
-      - huy động vốn
-      - quản lý nợ xấu
-      - thị trường chứng khoán
-      - trái phiếu
-      - giao dịch viên ngân hàng
-      - Commercial Banking
-      - Credit Appraisal
-      - Asset Liability Management
-      - Non-Performing Loans
-      - Stock Market
-      - Investment Banking
-      - Wealth Management
+      - đạo diễn sự kiện
+      - kịch bản chương trình
+      - quản lý nghệ sĩ
+      - tài trợ sự kiện
+      - điều phối hậu cần
+      - âm thanh ánh sáng
+      - bản quyền nghệ thuật
+      - Event Planning
+      - Logistics Coordination
+      - Artist Management
+      - Show Director
+      - Event Sponsoring
+      - Entertainment Production
+      - Stage Management
+      - Booking Agent

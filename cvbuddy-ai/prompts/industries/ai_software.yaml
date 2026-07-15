@@ -22,18 +22,37 @@ guidance:
   - Do not convert missing keywords into claimed achievements; list them as missing or suggested learning areas.
   - If no job description is provided, assess general fit for AI intern or junior software roles, not a specific vacancy.
 verticals:
-  ai_intern:
-    display_name: AI Intern / Fresher
+  machine_learning:
+    display_name: Machine Learning / AI Engineering
     keywords:
       - Python
       - machine learning
+      - deep learning
       - model evaluation
       - data preprocessing
       - scikit-learn
+      - TensorFlow
+      - PyTorch
       - Git
-      - teamwork
+      - experiment tracking
     sample_bullets:
       - "Built a machine learning project in Python and documented model choices, dataset preprocessing, and evaluation results."
+  data_science:
+    display_name: Data Science
+    keywords:
+      - Python
+      - R
+      - SQL
+      - data analysis
+      - data cleaning
+      - visualization
+      - statistics
+      - predictive modeling
+      - pandas
+      - Power BI
+      - Tableau
+    sample_bullets:
+      - "Analyzed structured data, cleaned features, and summarized findings with visualizations or evaluation metrics."
   computer_vision:
     display_name: Computer Vision
     keywords:

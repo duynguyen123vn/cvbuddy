@@ -1,19 +1,128 @@
 slug: marketing
 display_name: Marketing / Truyền thông
 core_keywords:
+  - marketing
+  - truyền thông
+  - nội dung
+  - chiến dịch
+  - thương hiệu
+  - khách hàng
   - campaign
   - content
   - social media
   - analytics
+  - branding
   - CRM
 red_flags:
-  - Lists platforms without role or outcome
+  - Chỉ liệt kê nền tảng hoặc công cụ mà không nêu vai trò, nội dung đã làm, đối tượng khách hàng, hoặc kết quả
+  - Tự nhận tăng trưởng, doanh thu, chuyển đổi, hoặc hiệu quả chiến dịch mà không có số liệu nguồn
+guidance:
+  - Phân biệt rõ marketing chiến lược, nội dung, thương hiệu, hiệu suất, PR, và nghiên cứu thị trường.
+  - Không biến keyword thiếu thành thành tích nếu CV không có bằng chứng.
+  - Ưu tiên hoạt động có sản phẩm đầu ra: bài viết, kế hoạch nội dung, chiến dịch, phân tích insight, báo cáo, sự kiện, hoặc kênh truyền thông.
 verticals:
-  default:
+  digital_marketing:
+    display_name: Digital Marketing
     keywords:
-      - KPI
-      - engagement rate
-      - ROI
-      - stakeholder
+      - Digital Marketing
+      - tiếp thị kỹ thuật số
+      - SEO
+      - SEM
+      - Google Ads
+      - Facebook Ads
+      - TikTok Ads
+      - analytics
+      - landing page
+      - conversion
+      - campaign performance
     sample_bullets:
-      - "Co-created Instagram content calendar for a student club, lifting engagement on key posts."
+      - "Supported digital marketing campaigns by preparing channel content, tracking performance, and summarizing insights."
+  content_marketing:
+    display_name: Content Marketing
+    keywords:
+      - Content Marketing
+      - sáng tạo nội dung
+      - content calendar
+      - copywriting
+      - storytelling
+      - blog
+      - social post
+      - video script
+      - caption
+      - editorial planning
+    sample_bullets:
+      - "Created content drafts and calendars for social channels while aligning tone, audience, and campaign objectives."
+  social_media:
+    display_name: Social Media Marketing
+    keywords:
+      - social media
+      - mạng xã hội
+      - Facebook
+      - TikTok
+      - Instagram
+      - community management
+      - engagement
+      - social listening
+      - content scheduling
+      - influencer
+    sample_bullets:
+      - "Planned and scheduled social media content, monitored engagement, and summarized audience feedback."
+  brand_management:
+    display_name: Brand Management
+    keywords:
+      - Brand Management
+      - quản trị thương hiệu
+      - brand positioning
+      - brand identity
+      - brand guideline
+      - customer insight
+      - campaign message
+      - product positioning
+      - brand awareness
+    sample_bullets:
+      - "Supported brand communication by aligning campaign messages with target audience insights and brand positioning."
+  performance_marketing:
+    display_name: Performance Marketing
+    keywords:
+      - Performance Marketing
+      - paid media
+      - CPC
+      - CPM
+      - CPA
+      - CTR
+      - conversion rate
+      - A/B testing
+      - ROI
+      - ROAS
+      - funnel
+    sample_bullets:
+      - "Tracked paid campaign indicators and prepared performance summaries for optimization discussion."
+  public_relations:
+    display_name: Quan hệ công chúng / Public Relations
+    keywords:
+      - Public Relations
+      - quan hệ công chúng
+      - press release
+      - media relations
+      - event communication
+      - crisis communication
+      - stakeholder communication
+      - sponsorship
+      - KOL
+    sample_bullets:
+      - "Assisted public communication activities by preparing event copy, media materials, or stakeholder updates."
+  market_research:
+    display_name: Nghiên cứu thị trường / Market Research
+    keywords:
+      - Market Research
+      - nghiên cứu thị trường
+      - khảo sát
+      - consumer behavior
+      - customer insight
+      - competitor analysis
+      - data analysis
+      - questionnaire
+      - interview
+      - report
+    sample_bullets:
+      - "Collected and summarized market or customer data to support campaign planning and business decisions."

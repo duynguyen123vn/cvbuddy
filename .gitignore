@@ -31,3 +31,9 @@ venv/
 .vscode/
 *.log
 .DS_Store
+
+# Local scratch files not part of CVBuddy
+1_1_1_Assignment_Chapter_9_classical-tts-pipeline-demo_completed.ipynb
+classical_tts_assignment_completed/
+_pdf_previews/
+tools/

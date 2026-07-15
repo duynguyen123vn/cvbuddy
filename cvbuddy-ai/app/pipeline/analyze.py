@@ -202,10 +202,7 @@ async def run_cv_analyze(
 
     requested_model = request.llm_model.value if request.llm_model else None
     if requested_model is None:
-        if settings.llm_provider == "ollama":
-            requested_model = settings.ollama_analyze_model
-        elif settings.llm_provider == "groq":
-            requested_model = settings.groq_analyze_model
+        requested_model = settings.groq_analyze_model
     service = llm_service or get_llm_service(model_name=requested_model)
     if service.use_mock:
         raw = mock_analyze_cv(request)
@@ -249,10 +246,8 @@ async def run_cv_analyze(
     language_mismatch = _feedback_language_mismatch(raw, _feedback_language(request))
     generic_feedback = _feedback_is_generic(raw)
     provider_name = getattr(service, "provider_name", "")
-    allow_quality_retry = provider_name != "ollama" and (
-        provider_name != "groq" or llm_service is not None
-    )
-    should_retry_language = language_mismatch and provider_name != "ollama"
+    allow_quality_retry = provider_name != "groq" or llm_service is not None
+    should_retry_language = language_mismatch
     if should_retry_language or (allow_quality_retry and generic_feedback):
         reasons = []
         if language_mismatch:
@@ -278,7 +273,7 @@ async def run_cv_analyze(
         )
     result = parse_analyze_response(raw, request)
     result.meta = {
-        "source": getattr(service, "provider_name", "ollama"),
+        "source": getattr(service, "provider_name", "groq"),
         "model": getattr(service, "model_name", requested_model or "unknown"),
         "language": request.language.value,
     }

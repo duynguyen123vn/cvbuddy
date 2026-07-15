@@ -48,7 +48,7 @@ async def run_portfolio_suggest(
         action_verbs=raw.get("action_verbs", []),
         industry_keywords=raw.get("industry_keywords", []),
         confidence=float(raw.get("confidence", 0.7)),
-        meta={"source": getattr(service, "provider_name", "ollama")},
+        meta={"source": getattr(service, "provider_name", "groq")},
     )
 
 

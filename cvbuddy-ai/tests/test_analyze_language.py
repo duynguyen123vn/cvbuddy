@@ -89,20 +89,3 @@ async def test_analyze_retries_once_when_feedback_language_is_wrong() -> None:
     assert "Phần kinh nghiệm" in result.company_model_feedback
     assert result.meta["language"] == "vi"
 
-
-class _LocalNoRetryService(_RetryingService):
-    provider_name = "ollama"
-
-
-@pytest.mark.asyncio
-async def test_analyze_does_not_quality_retry_slow_local_model() -> None:
-    service = _LocalNoRetryService()
-    request = AnalyzeCvRequest(
-        sections=CvSections(experience=["Phát triển dự án AI"]),
-        industry_slug="computer_science",
-        language=LanguageMode.VI,
-    )
-
-    await run_cv_analyze(request, llm_service=service)
-
-    assert service.calls == 1

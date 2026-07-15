@@ -14,6 +14,78 @@ from app.schemas.cv import AnalyzeCvRequest, CompanyModel
 
 PROMPTS_ROOT = Path(__file__).resolve().parents[2] / "prompts"
 
+INDUSTRY_DISPLAY_ORDER = {
+    "ai_software": 10,
+    "computer_science": 20,
+    "business_administration": 30,
+    "marketing": 40,
+    "finance_banking": 50,
+    "hospitality_tourism": 60,
+    "language": 70,
+    "law": 80,
+}
+
+VERTICAL_DISPLAY_ORDER = {
+    "ai_software": {
+        "machine_learning": 10,
+        "data_science": 20,
+        "computer_vision": 30,
+        "nlp": 40,
+        "backend_ai": 50,
+    },
+    "computer_science": {
+        "software_engineering": 10,
+        "web_development": 20,
+        "mobile_development": 30,
+        "data_engineering": 40,
+        "cybersecurity": 50,
+        "information_systems": 60,
+        "cloud_devops": 70,
+    },
+    "business_administration": {
+        "general_business": 10,
+        "international_business": 20,
+        "ecommerce": 30,
+        "customer_experience": 40,
+        "business_analytics": 50,
+        "logistics_supply_chain": 60,
+        "procurement": 70,
+        "event_management": 80,
+    },
+    "marketing": {
+        "digital_marketing": 10,
+        "content_marketing": 20,
+        "social_media": 30,
+        "brand_management": 40,
+        "performance_marketing": 50,
+        "public_relations": 60,
+        "market_research": 70,
+    },
+    "finance_banking": {
+        "banking_finance": 10,
+        "corporate_finance": 20,
+        "fintech": 30,
+        "smart_finance": 40,
+    },
+    "hospitality_tourism": {
+        "hospitality_management": 10,
+        "tourism_travel": 20,
+        "restaurant_service": 30,
+    },
+    "language": {
+        "english_language": 10,
+        "chinese_language": 20,
+        "japanese_language": 30,
+        "korean_language": 40,
+        "translation_interpretation": 50,
+        "language_teaching": 60,
+    },
+    "law": {
+        "general_law": 10,
+        "economic_law": 20,
+    },
+}
+
 
 class IndustryContextError(ValueError):
     pass
@@ -130,6 +202,7 @@ class ContextMatrixBuilder:
             industry = _load_yaml(path)
             slug = industry.get("slug") or path.stem
             verticals = industry.get("verticals") or {}
+            vertical_order = VERTICAL_DISPLAY_ORDER.get(slug, {})
             industries.append(
                 {
                     "slug": slug,
@@ -139,11 +212,23 @@ class ContextMatrixBuilder:
                             "slug": vertical_slug,
                             "display_name": vertical.get("display_name") or vertical_slug,
                         }
-                        for vertical_slug, vertical in verticals.items()
+                        for vertical_slug, vertical in sorted(
+                            verticals.items(),
+                            key=lambda item: (
+                                vertical_order.get(item[0], 10_000),
+                                item[1].get("display_name") or item[0],
+                            ),
+                        )
                     ],
                 }
             )
-        return industries
+        return sorted(
+            industries,
+            key=lambda industry: (
+                INDUSTRY_DISPLAY_ORDER.get(industry["slug"], 10_000),
+                industry["display_name"],
+            ),
+        )
 
     def to_prompt_payload(self, context: dict[str, Any]) -> str:
         """Create a stable JSON payload for the configured LLM."""

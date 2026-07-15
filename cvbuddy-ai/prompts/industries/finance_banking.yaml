@@ -1,0 +1,88 @@
+slug: finance_banking
+display_name: Tài chính - Ngân hàng / Finance & Banking
+core_keywords:
+  - tài chính
+  - ngân hàng
+  - kế toán
+  - tín dụng
+  - đầu tư
+  - phân tích tài chính
+  - finance
+  - banking
+  - financial analysis
+  - investment
+  - risk management
+red_flags:
+  - Claims valuation, investment, risk, or revenue impact without source-backed evidence
+  - Lists finance concepts without projects, coursework, tools, reports, or transaction context
+guidance:
+  - Keep finance claims grounded in coursework, reports, internships, tools, or measurable analysis.
+  - Do not invent revenue, portfolio return, valuation, or risk metrics.
+  - Treat Vietnamese and English equivalents as the same competency when checking missing keywords.
+verticals:
+  banking_finance:
+    display_name: Tài chính ngân hàng / Banking & Finance
+    keywords:
+      - tín dụng ngân hàng
+      - thẩm định tín dụng
+      - huy động vốn
+      - quản lý nợ xấu
+      - thị trường chứng khoán
+      - trái phiếu
+      - giao dịch viên ngân hàng
+      - Commercial Banking
+      - Credit Appraisal
+      - Asset Liability Management
+      - Non-Performing Loans
+      - Stock Market
+      - Investment Banking
+      - Wealth Management
+  corporate_finance:
+    display_name: Tài chính doanh nghiệp / Corporate Finance
+    keywords:
+      - thẩm định dự án
+      - thẩm định đầu tư
+      - cấu trúc vốn
+      - quản trị rủi ro tài chính
+      - báo cáo lưu chuyển tiền tệ
+      - huy động vốn
+      - Capital Budgeting
+      - Financial Modeling
+      - Capital Structure
+      - Cash Flow Analysis
+      - Corporate Valuation
+      - Fund Raising
+      - Risk Management
+  fintech:
+    display_name: Công nghệ tài chính / Fintech
+    keywords:
+      - ví điện tử
+      - cho vay ngang hàng
+      - tiền mã hóa
+      - ngân hàng số
+      - chuỗi khối
+      - định danh điện tử
+      - thuật toán giao dịch
+      - Financial Technology
+      - Blockchain
+      - Cryptocurrency
+      - P2P Lending
+      - Digital Banking
+      - eKYC
+      - Algorithmic Trading
+      - Insurtech
+      - Mobile Payment
+  smart_finance:
+    display_name: Tài chính thông minh / Smart Finance
+    keywords:
+      - tài chính hành vi
+      - giao dịch tự động
+      - phân tích định lượng
+      - quản lý tài sản số
+      - tối ưu danh mục đầu tư
+      - Quantitative Finance
+      - Behavioral Finance
+      - Automated Trading
+      - Digital Asset Management
+      - Portfolio Optimization
+      - Financial Forecasting AI

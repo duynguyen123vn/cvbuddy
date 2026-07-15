@@ -17,7 +17,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="CVBuddy AI",
-    description="Local document extraction → Ollama/Groq → structured CV analysis",
+    description="Local document extraction → Groq Qwen → structured CV analysis",
     version="0.1.0",
     lifespan=lifespan,
 )

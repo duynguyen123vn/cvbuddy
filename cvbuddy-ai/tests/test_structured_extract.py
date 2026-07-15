@@ -43,3 +43,30 @@ def test_structured_records_preserve_raw_text_and_date() -> None:
     assert record.title == "Team Member"
     assert record.details == ["Face Recognition System", "Built the GUI"]
     assert record.source_block_ids == ["b1"]
+
+
+def test_personal_info_extracts_name_title_contact_and_links() -> None:
+    document = DocumentExtractResult(
+        normalized_text="Nguyễn Hoàng Duy\nIntern\nMale\n[EMAIL]\nwww.linkedin.com/in/nguyen-duy",
+        engine="test",
+        blocks=[],
+    )
+    sections = CvSections(
+        other=[
+            "Nguyễn Hoàng Duy",
+            "Intern",
+            "Male",
+            "(+84) [PHONE]",
+            "[EMAIL]",
+            "Cai Rang Ward, Can Tho City",
+            "www.linkedin.com/in/nguyen-duy",
+        ],
+    )
+
+    structured, _coverage = build_structured_document(sections, document)
+
+    assert structured.personal_info["name"] == ["Nguyễn Hoàng Duy"]
+    assert structured.personal_info["title"] == ["Intern"]
+    assert structured.personal_info["contact"] == ["(+84) [PHONE]", "[EMAIL]"]
+    assert structured.personal_info["links"] == ["www.linkedin.com/in/nguyen-duy"]
+    assert "Male" in structured.personal_info["other"]

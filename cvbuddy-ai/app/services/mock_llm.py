@@ -56,7 +56,7 @@ def mock_translate(request: TranslateRequest) -> TranslateResponse:
     prefix = "[CV-native mock] " if request.mode.value == "cv_native" else "[Literal mock] "
     return TranslateResponse(
         translated=prefix + request.text,
-        notes=["Set LLM_PROVIDER=ollama or configure Groq for real translation."],
+        notes=["Set LLM_PROVIDER=groq and configure GROQ_API_KEY for real translation."],
         meta={"source": "mock"},
     )
 

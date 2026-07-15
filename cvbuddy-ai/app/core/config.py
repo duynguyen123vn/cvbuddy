@@ -8,17 +8,12 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    llm_provider: str = "groq"  # ollama | groq | mock
+    llm_provider: str = "groq"  # groq | mock
     groq_api_key: str = ""
     groq_model: str = "qwen/qwen3.6-27b"
     groq_extract_model: str = "qwen/qwen3-32b"
     groq_analyze_model: str = "qwen/qwen3.6-27b"
-    groq_fallback_model: str = "llama-3.3-70b-versatile"
-    ollama_base_url: str = "http://127.0.0.1:11434"
-    ollama_model: str = "qwen3:8b"
-    ollama_extract_model: str = "qwen3.5:4b"
-    ollama_analyze_model: str = "qwen3:8b"
-    ollama_timeout_seconds: int = 120
+    groq_fallback_model: str = "qwen/qwen3-32b"
     mock_llm: bool = False
 
     app_env: str = "development"
@@ -37,8 +32,6 @@ class Settings(BaseSettings):
             return True
         if self.llm_provider == "groq":
             return not self.groq_api_key.strip()
-        if self.llm_provider == "ollama":
-            return False
         return True
 
 

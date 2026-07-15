@@ -412,7 +412,7 @@ def test_hybrid_uses_ai_for_multi_column_document(
 
 def test_extract_and_analyze_rejects_wrong_vertical(client: TestClient) -> None:
     response = client.post(
-        "/v1/cv/extract-and-analyze?mode=local&industry_slug=law&vertical_slug=economic_law",
+        "/v1/cv/extract-and-analyze?mode=local&industry_slug=law&vertical_slug=economic_law&strict_industry_match=true",
         files={
             "file": (
                 "ai-cv.docx",
@@ -437,7 +437,7 @@ def test_extract_and_analyze_rejects_wrong_vertical(client: TestClient) -> None:
 
 def test_extract_and_analyze_accepts_matching_vertical(client: TestClient) -> None:
     response = client.post(
-        "/v1/cv/extract-and-analyze?mode=local&industry_slug=computer_science&vertical_slug=ai_data_science&target_language=en",
+        "/v1/cv/extract-and-analyze?mode=local&industry_slug=ai_software&vertical_slug=machine_learning&target_language=en",
         files={
             "file": (
                 "ai-cv.docx",

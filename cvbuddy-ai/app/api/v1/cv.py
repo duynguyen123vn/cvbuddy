@@ -88,10 +88,7 @@ async def extract_cv(
     data = await file.read()
     effective_model = llm_model.value if llm_model else None
     if effective_model is None:
-        if settings.llm_provider == "ollama":
-            effective_model = settings.ollama_extract_model
-        elif settings.llm_provider == "groq":
-            effective_model = settings.groq_extract_model
+        effective_model = settings.groq_extract_model
     try:
         result = await extract_cv_sections(
             file.filename,
@@ -150,7 +147,7 @@ async def extract_and_analyze(
     mode: ExtractMode = ExtractMode.HYBRID,
     target_language: TargetLanguage = TargetLanguage.AUTO,
     llm_model: LlmModel | None = None,
-    strict_industry_match: bool = True,
+    strict_industry_match: bool = False,
 ) -> AnalyzeCvResponse:
     """Upload a file, parse sections, then analyze the parsed CV."""
     from app.schemas.cv import CompanyModel

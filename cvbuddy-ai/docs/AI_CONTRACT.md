@@ -31,8 +31,8 @@ Input shape is represented by `AnalyzeCvRequest`.
 Important fields:
 
 - `sections`: extracted CV sections. Prefer this over sending raw files to the LLM.
-- `industry_slug`: taxonomy key such as `marketing` or `language`.
-- `vertical_slug`: optional sub-context such as `english_center` or `hospitality`.
+- `industry_slug`: taxonomy key such as `marketing`, `language`, or `computer_science`.
+- `vertical_slug`: optional sub-context such as `english_language`, `software_engineering`, or `hospitality_management`.
 - `company_model`: `corporate` or `startup_agency`.
 - `jd_extract`: optional structured job description data.
 - `language`: `vi`, `en`, or `both`.

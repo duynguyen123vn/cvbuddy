@@ -1,29 +1,118 @@
 slug: language
 display_name: Ngôn ngữ / Languages
 core_keywords:
+  - ngoại ngữ
+  - giao tiếp liên văn hóa
+  - biên phiên dịch
+  - giao tiếp
+  - English
+  - Chinese
+  - Japanese
+  - Korean
+  - translation
+  - interpretation
   - communication
-  - presentation
-  - cross-cultural
+  - cross-cultural communication
 red_flags:
-  - Only lists language level without any teaching/tutoring/customer context
+  - Chỉ liệt kê trình độ ngoại ngữ nhưng không có hoạt động, dự án, trợ giảng, biên dịch, giao tiếp khách hàng, hoặc bối cảnh sử dụng ngôn ngữ
+  - Tự nhận năng lực biên phiên dịch/giảng dạy mà không có học phần, hoạt động, chứng chỉ, hoặc kinh nghiệm hỗ trợ tương ứng
+guidance:
+  - Chuyên ngành ngôn ngữ phải phản ánh ngành học hoặc năng lực ngôn ngữ chính, không phải nơi thực tập.
+  - Trung tâm Anh ngữ, khách sạn, du lịch, văn phòng, và chăm sóc khách hàng là mục tiêu thực tập/career target, không phải vertical chính.
+  - Đánh giá cả năng lực ngôn ngữ, hoạt động học thuật, chứng chỉ, giao tiếp, biên dịch, trợ giảng, và trải nghiệm làm việc liên quan.
 verticals:
-  english_center:
-    display_name: Trung tâm Anh ngữ
+  english_language:
+    display_name: Ngôn ngữ Anh / English Language
     keywords:
-      - lesson planning
+      - Ngôn ngữ Anh
+      - tiếng Anh
+      - English Language
+      - English communication
+      - academic writing
+      - reading
+      - speaking
+      - listening
+      - IELTS
+      - TOEIC
       - CEFR
+      - communication
+      - presentation
+    sample_bullets:
+      - "Used English communication and academic writing skills in coursework, presentations, and student support activities."
+  chinese_language:
+    display_name: Ngôn ngữ Trung / Chinese Language
+    keywords:
+      - Ngôn ngữ Trung
+      - tiếng Trung
+      - Chinese Language
+      - Mandarin
+      - HSK
+      - Chinese communication
+      - business Chinese
+      - translation
+      - interpretation
+      - cross-cultural communication
+    sample_bullets:
+      - "Applied Chinese communication skills in translation, presentation, or cross-cultural coursework."
+  japanese_language:
+    display_name: Ngôn ngữ Nhật / Japanese Language
+    keywords:
+      - Ngôn ngữ Nhật
+      - tiếng Nhật
+      - Japanese Language
+      - JLPT
+      - N5
+      - N4
+      - N3
+      - Japanese communication
+      - business Japanese
+      - translation
+      - interpretation
+    sample_bullets:
+      - "Applied Japanese language skills in coursework, communication practice, or translation activities."
+  korean_language:
+    display_name: Ngôn ngữ Hàn / Korean Language
+    keywords:
+      - Ngôn ngữ Hàn
+      - tiếng Hàn
+      - Korean Language
+      - TOPIK
+      - Korean communication
+      - business Korean
+      - translation
+      - interpretation
+      - cross-cultural communication
+    sample_bullets:
+      - "Applied Korean communication skills in coursework, cultural activities, or translation practice."
+  translation_interpretation:
+    display_name: Biên phiên dịch / Translation & Interpretation
+    keywords:
+      - biên dịch
+      - phiên dịch
+      - dịch thuật
+      - translation
+      - interpretation
+      - localization
+      - terminology
+      - proofreading
+      - bilingual communication
+      - consecutive interpreting
+      - document translation
+    sample_bullets:
+      - "Translated and proofread bilingual materials while preserving terminology, tone, and context."
+  language_teaching:
+    display_name: Giảng dạy ngôn ngữ / Language Teaching
+    keywords:
+      - giảng dạy ngôn ngữ
+      - trợ giảng
+      - Teaching Assistant
+      - tutoring
+      - lesson preparation
+      - classroom support
+      - student support
+      - lesson planning
       - classroom management
       - student engagement
-      - tutoring
+      - CEFR
     sample_bullets:
-      - "Facilitated speaking clubs for 20+ learners, improving participation in pair activities."
-  hospitality:
-    display_name: Khách sạn / Du lịch
-    keywords:
-      - guest relations
-      - front desk
-      - OTA
-      - complaint handling
-      - upselling
-    sample_bullets:
-      - "Assisted front-desk check-in for international guests during peak season."
+      - "Supported language learning activities through lesson preparation, classroom support, and student communication."
