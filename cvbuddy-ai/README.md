@@ -1,13 +1,13 @@
 # CVBuddy AI Service
 
-FastAPI service for lossless CV extraction, structured analysis, translation, and portfolio suggestions. PDF/DOCX processing runs locally and Qwen inference uses Groq Cloud.
+FastAPI service for lossless CV extraction, structured analysis, translation, and portfolio suggestions. PDF/DOCX processing runs locally and LLM inference uses Groq Cloud.
 
 ## Runtime
 
 - Python 3.12
 - FastAPI and Pydantic v2
 - PyMuPDF/python-docx for document extraction
-- Groq with separate Qwen models for extraction and analysis
+- Groq with Qwen 3.6 27B as the primary extraction/analysis model and GPT OSS 120B as fallback
 
 ## Start
 
@@ -35,9 +35,9 @@ Default Groq setup:
 LLM_PROVIDER=groq
 GROQ_API_KEY=
 GROQ_MODEL=qwen/qwen3.6-27b
-GROQ_EXTRACT_MODEL=qwen/qwen3-32b
+GROQ_EXTRACT_MODEL=qwen/qwen3.6-27b
 GROQ_ANALYZE_MODEL=qwen/qwen3.6-27b
-GROQ_FALLBACK_MODEL=qwen/qwen3-32b
+GROQ_FALLBACK_MODEL=openai/gpt-oss-120b
 MOCK_LLM=false
 ```
 
@@ -48,10 +48,10 @@ API keys remain in the backend `.env`; never expose them to the frontend.
 ```text
 PDF/DOCX
   -> PyMuPDF/python-docx text blocks
-  -> Groq Qwen 3 32B section parsing when mode=ai
+  -> Groq Qwen 3.6 27B section parsing when mode=ai
   -> structured_document + coverage audit
   -> industry validation
-  -> Groq Qwen 3.6 27B analysis
+  -> Groq Qwen 3.6 27B analysis, with GPT OSS 120B fallback
   -> grounded JSON response
 ```
 

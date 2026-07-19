@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"  # groq | mock
     groq_api_key: str = ""
     groq_model: str = "qwen/qwen3.6-27b"
-    groq_extract_model: str = "qwen/qwen3-32b"
+    groq_extract_model: str = "qwen/qwen3.6-27b"
     groq_analyze_model: str = "qwen/qwen3.6-27b"
-    groq_fallback_model: str = "qwen/qwen3-32b"
+    groq_fallback_model: str = "openai/gpt-oss-120b"
     mock_llm: bool = False
 
     app_env: str = "development"
