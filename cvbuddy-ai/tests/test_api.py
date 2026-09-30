@@ -69,7 +69,8 @@ def test_list_models(client: TestClient) -> None:
     payload = response.json()
     model_ids = {model["id"] for model in payload["models"]}
     assert payload["provider"] == "groq"
-    assert "qwen/qwen3.6-27b" in model_ids
+    assert "qwen/qwen3.8-27b" in model_ids
+    assert "qwen/qwen3.6-27b" not in model_ids
     assert "openai/gpt-oss-120b" in model_ids
     assert "qwen/qwen3-32b" not in model_ids
     assert all("llama" not in model_id.lower() for model_id in model_ids)

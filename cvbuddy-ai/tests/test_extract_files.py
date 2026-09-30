@@ -348,7 +348,7 @@ def test_extract_ai_mode_passes_selected_model(
     monkeypatch.setattr(extract_pipeline, "run_ai_extract_sections", fake_ai_extract)
 
     r = client.post(
-        "/v1/cv/extract?mode=ai&llm_model=qwen%2Fqwen3.6-27b",
+        "/v1/cv/extract?mode=ai&llm_model=qwen%2Fqwen3.8-27b",
         files={
             "file": (
                 "model-cv.docx",
@@ -359,8 +359,8 @@ def test_extract_ai_mode_passes_selected_model(
     )
 
     assert r.status_code == 200
-    assert seen["llm_model"] == "qwen/qwen3.6-27b"
-    assert r.json()["meta"]["llm_model"] == "qwen/qwen3.6-27b"
+    assert seen["llm_model"] == "qwen/qwen3.8-27b"
+    assert r.json()["meta"]["llm_model"] == "qwen/qwen3.8-27b"
 
 
 def test_hybrid_uses_ai_for_multi_column_document(

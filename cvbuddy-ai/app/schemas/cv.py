@@ -21,7 +21,7 @@ class UserTier(StrEnum):
 
 
 class LlmModel(StrEnum):
-    QWEN_3_6_27B = "qwen/qwen3.6-27b"
+    QWEN_3_8_27B = "qwen/qwen3.8-27b"
     GPT_OSS_120B = "openai/gpt-oss-120b"
 
 

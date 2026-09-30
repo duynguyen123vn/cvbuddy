@@ -34,9 +34,9 @@ Default Groq setup:
 ```env
 LLM_PROVIDER=groq
 GROQ_API_KEY=
-GROQ_MODEL=qwen/qwen3.6-27b
-GROQ_EXTRACT_MODEL=qwen/qwen3.6-27b
-GROQ_ANALYZE_MODEL=qwen/qwen3.6-27b
+GROQ_MODEL=qwen/qwen3.8-27b
+GROQ_EXTRACT_MODEL=qwen/qwen3.8-27b
+GROQ_ANALYZE_MODEL=qwen/qwen3.8-27b
 GROQ_FALLBACK_MODEL=openai/gpt-oss-120b
 MOCK_LLM=false
 ```

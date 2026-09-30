@@ -6,7 +6,7 @@ from app.schemas.cv import LlmModel
 router = APIRouter(prefix="/models")
 
 MODEL_LABELS = {
-    LlmModel.QWEN_3_6_27B: "Qwen 3.6 27B",
+    LlmModel.QWEN_3_8_27B: "Qwen 3.8 27B",
     LlmModel.GPT_OSS_120B: "GPT OSS 120B",
 }
 
