@@ -1,9 +1,12 @@
+from time import perf_counter
+
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 
 from app.pipeline.analyze import run_cv_analyze
 from app.pipeline.context_matrix import IndustryContextError
 from app.pipeline.extract import ExtractMode, TargetLanguage, extract_cv_sections
 from app.core.config import settings
+from app.core.response_metadata import attach_provider_metadata
 from app.schemas.cv import (
     AnalyzeCvRequest,
     AnalyzeCvResponse,
@@ -50,8 +53,19 @@ def _resolve_analysis_language(
 @router.post("/analyze", response_model=AnalyzeCvResponse)
 async def analyze_cv(body: AnalyzeCvRequest) -> AnalyzeCvResponse:
     """Main endpoint; expects pre-extracted sections from web or prior extract call."""
+    started = perf_counter()
     try:
-        return await run_cv_analyze(body)
+        result = await run_cv_analyze(body)
+        meta = result.meta
+        provider = meta.get("source", "groq") if isinstance(meta, dict) else "groq"
+        model = meta.get("model", body.llm_model.value if body.llm_model else settings.groq_analyze_model) if isinstance(meta, dict) else settings.groq_analyze_model
+        return attach_provider_metadata(
+            result,
+            provider=provider,
+            model=model,
+            source=provider,
+            latency_ms=(perf_counter() - started) * 1000,
+        )
     except LLMQuotaError as exc:
         headers = {}
         if exc.retry_after_seconds is not None:
@@ -62,8 +76,7 @@ async def analyze_cv(body: AnalyzeCvRequest) -> AnalyzeCvResponse:
             headers=headers,
         ) from exc
     except LLMUpstreamError as exc:
-        status = exc.status_code or 502
-        raise HTTPException(status_code=status, detail="LLM upstream error. See server logs.") from exc
+        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
     except IndustryContextError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -83,6 +96,7 @@ async def extract_cv(
     ),
 ) -> dict:
     """Extract PDF/DOCX text, parse CV sections, and compute local metrics."""
+    started = perf_counter()
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
     data = await file.read()
@@ -102,8 +116,7 @@ async def extract_cv(
     except LLMQuotaError as exc:
         raise HTTPException(status_code=429, detail="LLM quota exceeded. Please retry later.") from exc
     except LLMUpstreamError as exc:
-        status = exc.status_code or 502
-        raise HTTPException(status_code=status, detail="AI provider is unavailable or timed out.") from exc
+        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
 
     response = {
         "sections": result.sections.model_dump(),
@@ -135,7 +148,14 @@ async def extract_cv(
     }
     if debug:
         response["normalized_text_preview"] = result.normalized_text[:2000]
-    return response
+    is_ai_provider = result.parser_source == "ai"
+    return attach_provider_metadata(
+        response,
+        provider="groq" if is_ai_provider else "local",
+        model=effective_model if is_ai_provider else "local",
+        source=result.parser_source,
+        latency_ms=(perf_counter() - started) * 1000,
+    )
 
 
 @router.post("/extract-and-analyze", response_model=AnalyzeCvResponse)
@@ -152,6 +172,7 @@ async def extract_and_analyze(
     """Upload a file, parse sections, then analyze the parsed CV."""
     from app.schemas.cv import CompanyModel
 
+    started = perf_counter()
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
     data = await file.read()
@@ -177,7 +198,17 @@ async def extract_and_analyze(
         strict_industry_match=strict_industry_match,
     )
     try:
-        return await run_cv_analyze(request)
+        result = await run_cv_analyze(request)
+        current = result.meta if isinstance(result.meta, dict) else {}
+        provider = current.get("source", "groq")
+        model = current.get("model", llm_model.value if llm_model else settings.groq_analyze_model)
+        return attach_provider_metadata(
+            result,
+            provider=provider,
+            model=model,
+            source=provider,
+            latency_ms=(perf_counter() - started) * 1000,
+        )
     except LLMQuotaError as exc:
         headers = {}
         if exc.retry_after_seconds is not None:
@@ -188,7 +219,6 @@ async def extract_and_analyze(
             headers=headers,
         ) from exc
     except LLMUpstreamError as exc:
-        status = exc.status_code or 502
-        raise HTTPException(status_code=status, detail="LLM upstream error. See server logs.") from exc
+        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
     except IndustryContextError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

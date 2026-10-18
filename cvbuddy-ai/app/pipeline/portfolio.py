@@ -94,8 +94,8 @@ async def run_portfolio_from_image(
         ),
         llm_service=llm_service,
     )
-    response.meta.update(
-        {
+    response.meta = response.meta.model_copy(
+        update={
             "image_url_received": "true",
             "vision_mode": "caption_context",
             "needs_user_confirmation": "true",

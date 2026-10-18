@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CompanyModel(StrEnum):
@@ -169,6 +169,17 @@ class CvRewrite(BaseModel):
     )
 
 
+class ProviderMetadata(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    source: str = "unknown"
+    provider: str = "unknown"
+    model: str = "unknown"
+    schemaVersion: str = "1.0.0"
+    promptVersion: str = "cv-prompts-v1"
+    latencyMs: float = 0.0
+
+
 class AnalyzeCvResponse(BaseModel):
     overall_score: int = Field(..., ge=0, le=100)
     dimensions: CvDimensions
@@ -176,6 +187,4 @@ class AnalyzeCvResponse(BaseModel):
     company_model_feedback: str = ""
     confidence: float = Field(..., ge=0.0, le=1.0)
     disclaimer: str = "AI-assisted feedback only; not a hiring guarantee."
-    meta: dict[str, str] = Field(
-        default_factory=lambda: {"source": "groq"}
-    )
+    meta: ProviderMetadata = Field(default_factory=ProviderMetadata)
