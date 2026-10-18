@@ -2,7 +2,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
-from app.schemas.cv import UserTier
+from app.schemas.cv import ProviderMetadata, UserTier
 
 
 class TranslateMode(StrEnum):
@@ -21,4 +21,4 @@ class TranslateRequest(BaseModel):
 class TranslateResponse(BaseModel):
     translated: str
     notes: list[str] = Field(default_factory=list, description="Style or grammar hints")
-    meta: dict[str, str] = Field(default_factory=dict)
+    meta: ProviderMetadata = Field(default_factory=ProviderMetadata)

@@ -24,7 +24,17 @@ requests from the web app.
 
 ## Endpoints
 
-### `POST /ai/cv/analyze`
+All API routes use the canonical `/v1` prefix. In production, every `/v1/*`
+request must include `X-AI-Internal-Key`; the secret is shared between the
+FastAPI service and the trusted server-side caller. Do not put this key in a
+browser application.
+
+Every response includes `X-Request-ID`. AI-generated responses include a
+structured `meta` object with `source`, `provider`, `model`, `schemaVersion`,
+`promptVersion`, and `latencyMs`. Errors use a stable `error.code` and generic
+public message; validation responses do not echo submitted values.
+
+### `POST /v1/cv/analyze`
 
 Input shape is represented by `AnalyzeCvRequest`.
 
@@ -50,9 +60,10 @@ Output shape is `AnalyzeCvResponse`:
 - `company_model_feedback`
 - `confidence`
 - `disclaimer`
-- `meta.source`
+- `meta.source`, `meta.provider`, `meta.model`, `meta.schemaVersion`,
+  `meta.promptVersion`, and `meta.latencyMs`
 
-### `POST /ai/translate`
+### `POST /v1/translate`
 
 Input shape is `TranslateRequest`.
 
@@ -62,7 +73,7 @@ Input shape is `TranslateRequest`.
 
 Output shape is `TranslateResponse`.
 
-### `POST /ai/portfolio/from-image`
+### `POST /v1/portfolio/from-image`
 
 Input shape is `PortfolioFromImageRequest`.
 

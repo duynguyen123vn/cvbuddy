@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from app.schemas.cv import UserTier
+from app.schemas.cv import ProviderMetadata, UserTier
 
 
 class PortfolioSuggestRequest(BaseModel):
@@ -35,4 +35,4 @@ class PortfolioSuggestResponse(BaseModel):
     action_verbs: list[str] = Field(default_factory=list)
     industry_keywords: list[str] = Field(default_factory=list)
     confidence: float = Field(..., ge=0.0, le=1.0)
-    meta: dict[str, str] = Field(default_factory=dict)
+    meta: ProviderMetadata = Field(default_factory=ProviderMetadata)

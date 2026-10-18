@@ -18,6 +18,142 @@ def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+    assert r.headers["x-request-id"]
+
+
+def test_request_id_is_returned_and_reused(client: TestClient) -> None:
+    response = client.get("/health", headers={"X-Request-ID": "java-trace-123"})
+
+    assert response.headers["X-Request-ID"] == "java-trace-123"
+
+
+def test_production_gate_requires_internal_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "ai_internal_key", "test-internal-secret")
+
+    denied = client.get("/v1/industries")
+    assert denied.status_code == 401
+    assert denied.json()["error"]["code"] == "authentication_required"
+    assert denied.headers["X-Request-ID"] == denied.json()["error"]["requestId"]
+
+    wrong_key = client.get(
+        "/v1/industries",
+        headers={"X-AI-Internal-Key": "wrong-secret"},
+    )
+    assert wrong_key.status_code == 401
+
+    allowed = client.get(
+        "/v1/industries",
+        headers={"X-AI-Internal-Key": "test-internal-secret"},
+    )
+    assert allowed.status_code == 200
+
+
+def test_legacy_ai_alias_is_removed(client: TestClient) -> None:
+    response = client.get("/ai/models")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "not_found"
+
+
+def test_production_config_fails_closed() -> None:
+    from app.core.config import Settings
+
+    config = Settings(
+        _env_file=None,
+        app_env="production",
+        llm_provider="groq",
+        groq_api_key="",
+        mock_llm=True,
+        ai_internal_key="",
+    )
+
+    with pytest.raises(RuntimeError, match="GROQ_API_KEY is required"):
+        config.validate_production_config()
+
+
+def test_validation_errors_do_not_echo_request_data(client: TestClient) -> None:
+    private_marker = "private-cv-marker-8492"
+    response = client.post(
+        "/v1/cv/analyze",
+        json={"sections": {"other": [private_marker]}},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+    assert private_marker not in response.text
+
+
+def test_fake_provider_response_has_metadata(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import settings
+    from app.pipeline import analyze as analyze_pipeline
+
+    class FakeProvider:
+        use_mock = False
+        provider_name = "fake-provider"
+        model_name = "fixture-model"
+
+        async def generate_json(self, **_kwargs) -> dict:
+            return {
+                "overall_score": 74,
+                "dimensions": {
+                    "layout_ats": {"score": 75, "issues": [], "fixes": []},
+                    "language": {"score": 82, "issues": [], "fixes": []},
+                    "keywords": {"score": 68, "missing": [], "suggested_bullets": []},
+                    "jd_fit": {"score": 65, "gaps": []},
+                },
+                "rewrites": [],
+                "company_model_feedback": "CV có kinh nghiệm hỗ trợ lớp học và sửa bài tập.",
+                "confidence": 0.8,
+            }
+
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "fake-test-key")
+    monkeypatch.setattr(settings, "mock_llm", False)
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: FakeProvider())
+    body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
+    body["language"] = "vi"
+
+    response = client.post("/v1/cv/analyze", json=body)
+
+    assert response.status_code == 200
+    metadata = response.json()["meta"]
+    assert metadata["source"] == "fake-provider"
+    assert metadata["provider"] == "fake-provider"
+    assert metadata["model"] == "fixture-model"
+    assert metadata["schemaVersion"]
+    assert metadata["promptVersion"]
+    assert isinstance(metadata["latencyMs"], (int, float))
+    assert response.headers["X-Request-ID"]
+
+
+def test_provider_error_is_sanitized(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import settings
+    from app.pipeline import analyze as analyze_pipeline
+    from app.services.errors import LLMUpstreamError
+
+    class FailingFakeProvider:
+        use_mock = False
+        provider_name = "fake-provider"
+        model_name = "fixture-model"
+
+        async def generate_json(self, **_kwargs) -> dict:
+            raise LLMUpstreamError(status_code=401, message="secret provider payload")
+
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "fake-test-key")
+    monkeypatch.setattr(settings, "mock_llm", False)
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: FailingFakeProvider())
+    body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
+
+    response = client.post("/v1/cv/analyze", json=body)
+
+    assert response.status_code == 502
+    assert response.json()["error"]["code"] == "provider_unavailable"
+    assert "secret provider payload" not in response.text
+    assert response.headers["X-Request-ID"]
 
 
 def test_list_industries(client: TestClient) -> None:
@@ -106,7 +242,7 @@ def test_analyze_rejects_unknown_industry(client: TestClient) -> None:
     response = client.post("/v1/cv/analyze", json=body)
 
     assert response.status_code == 422
-    assert "Nhóm ngành không tồn tại" in response.json()["detail"]
+    assert response.json()["error"]["code"] == "validation_error"
 
 
 def test_analyze_cv_mock(client: TestClient) -> None:
@@ -119,16 +255,9 @@ def test_analyze_cv_mock(client: TestClient) -> None:
     assert data["meta"]["source"] == "mock"
 
 
-def test_ai_contract_alias_for_analyze_cv(client: TestClient) -> None:
-    body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
-    r = client.post("/ai/cv/analyze", json=body)
-    assert r.status_code == 200
-    assert r.json()["meta"]["source"] == "mock"
-
-
 def test_portfolio_from_image_with_caption(client: TestClient) -> None:
     r = client.post(
-        "/ai/portfolio/from-image",
+        "/v1/portfolio/from-image",
         json={
             "image_url": "https://res.cloudinary.com/demo/image/upload/activity.jpg",
             "industry_slug": "marketing",
@@ -144,7 +273,7 @@ def test_portfolio_from_image_with_caption(client: TestClient) -> None:
 
 def test_portfolio_from_image_without_caption_needs_context(client: TestClient) -> None:
     r = client.post(
-        "/ai/portfolio/from-image",
+        "/v1/portfolio/from-image",
         json={
             "image_url": "https://res.cloudinary.com/demo/image/upload/activity.jpg",
             "industry_slug": "marketing",

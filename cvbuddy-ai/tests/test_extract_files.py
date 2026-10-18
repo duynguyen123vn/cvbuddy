@@ -432,7 +432,7 @@ def test_extract_and_analyze_rejects_wrong_vertical(client: TestClient) -> None:
     )
 
     assert response.status_code == 422
-    assert "không khớp chuyên ngành" in response.json()["detail"]
+    assert response.json()["error"]["code"] == "validation_error"
 
 
 def test_extract_and_analyze_accepts_matching_vertical(client: TestClient) -> None:
@@ -466,4 +466,4 @@ def test_extract_rejects_unsupported_file_type(client: TestClient) -> None:
     )
 
     assert r.status_code == 422
-    assert "Unsupported file type" in r.json()["detail"]
+    assert r.json()["error"]["code"] == "validation_error"
