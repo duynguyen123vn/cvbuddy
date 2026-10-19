@@ -1,6 +1,6 @@
 from time import perf_counter
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile
 
 from app.pipeline.analyze import run_cv_analyze
 from app.pipeline.context_matrix import IndustryContextError
@@ -16,6 +16,22 @@ from app.schemas.cv import (
 )
 
 router = APIRouter(prefix="/cv")
+
+
+def _has_extracted_content(sections: CvSections) -> bool:
+    return any(
+        item.strip()
+        for values in sections.model_dump().values()
+        for item in values
+        if isinstance(item, str)
+    )
+
+
+def _effective_target_language(
+    query_value: TargetLanguage,
+    form_value: TargetLanguage | None,
+) -> TargetLanguage:
+    return form_value or query_value
 
 
 def _resolve_analysis_language(
@@ -53,6 +69,8 @@ def _resolve_analysis_language(
 async def analyze_cv(body: AnalyzeCvRequest) -> AnalyzeCvResponse:
     """Main endpoint; expects pre-extracted sections from web or prior extract call."""
     started = perf_counter()
+    if not _has_extracted_content(body.sections):
+        raise HTTPException(status_code=422, detail="No extracted CV content was provided.")
     try:
         result = await run_cv_analyze(body)
         meta = result.meta
@@ -77,6 +95,7 @@ async def extract_cv(
         TargetLanguage.AUTO,
         description="auto, en, vi, or both. AI parser uses this to avoid merging bilingual CV versions.",
     ),
+    target_language_form: TargetLanguage | None = Form(None, alias="target_language"),
     debug: bool = Query(False, description="Include a short normalized text preview for extraction QA."),
     llm_model: LlmModel | None = Query(
         None,
@@ -88,6 +107,7 @@ async def extract_cv(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
     data = await file.read()
+    target_language = _effective_target_language(target_language, target_language_form)
     effective_model = llm_model.value if llm_model else None
     if effective_model is None:
         effective_model = settings.groq_extract_model
@@ -101,6 +121,9 @@ async def extract_cv(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if not result.normalized_text.strip() and not _has_extracted_content(result.sections):
+        raise HTTPException(status_code=422, detail="No extractable CV content was found.")
 
     response = {
         "sections": result.sections.model_dump(),
@@ -148,7 +171,8 @@ async def extract_and_analyze(
     vertical_slug: str | None = None,
     company_model: str = "corporate",
     mode: ExtractMode = ExtractMode.HYBRID,
-    target_language: TargetLanguage = TargetLanguage.AUTO,
+    target_language: TargetLanguage = Query(TargetLanguage.AUTO),
+    target_language_form: TargetLanguage | None = Form(None, alias="target_language"),
     llm_model: LlmModel | None = None,
     strict_industry_match: bool = False,
 ) -> AnalyzeCvResponse:
@@ -159,6 +183,7 @@ async def extract_and_analyze(
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
     data = await file.read()
+    target_language = _effective_target_language(target_language, target_language_form)
     try:
         extract_result = await extract_cv_sections(
             file.filename,
@@ -169,6 +194,11 @@ async def extract_and_analyze(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    if not extract_result.normalized_text.strip() and not _has_extracted_content(extract_result.sections):
+        raise HTTPException(status_code=422, detail="No extractable CV content was found.")
+    if not _has_extracted_content(extract_result.sections):
+        raise HTTPException(status_code=422, detail="No CV sections were extracted for analysis.")
 
     request = AnalyzeCvRequest(
         sections=extract_result.sections,

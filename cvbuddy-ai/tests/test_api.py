@@ -246,6 +246,29 @@ def test_validation_errors_do_not_echo_request_data(client: TestClient) -> None:
     assert private_marker not in response.text
 
 
+def test_analyze_rejects_empty_sections_before_provider_call(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.pipeline import analyze as analyze_pipeline
+
+    def fail_if_called(*_args, **_kwargs):
+        raise AssertionError("analysis must not run without extracted CV content")
+
+    monkeypatch.setattr(analyze_pipeline, "run_cv_analyze", fail_if_called)
+    response = client.post(
+        "/v1/cv/analyze",
+        json={
+            "sections": {},
+            "industry_slug": "ai_software",
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["error"]["code"] == "validation_error"
+
+
 def test_fake_provider_response_has_metadata(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     from app.core.config import settings
     from app.pipeline import analyze as analyze_pipeline

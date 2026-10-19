@@ -146,6 +146,14 @@ def test_extract_docx_multiple_cv_shapes(
     data = r.json()
     sections = data["sections"]
     metrics = data["local_metrics"]
+    assert {
+        "bullet_count",
+        "quantified_bullet_count",
+        "has_quantified_bullets",
+        "avg_bullet_length",
+        "section_count",
+        "detected_languages",
+    } <= metrics.keys()
 
     for section_name in ("summary", "education", "skills", "experience", "projects"):
         if section_name in expected:
@@ -325,6 +333,115 @@ def test_extract_ai_mode_passes_target_language(
     assert seen["target_language"] == "en"
     assert r.json()["meta"]["target_language"] == "en"
     assert r.json()["sections"]["summary"] == ["English version only"]
+
+
+def test_extract_ai_mode_accepts_target_language_from_multipart_form(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.pipeline import extract as extract_pipeline
+    from app.schemas.cv import CvSections
+
+    seen: dict[str, str] = {}
+
+    async def fake_ai_extract(
+        _normalized_text: str,
+        *,
+        target_language: str = "auto",
+        llm_model: str | None = None,
+    ) -> CvSections:
+        seen["target_language"] = target_language
+        return CvSections(summary=["Synthetic summary"])
+
+    monkeypatch.setattr(extract_pipeline, "run_ai_extract_sections", fake_ai_extract)
+    response = client.post(
+        "/v1/cv/extract?mode=ai",
+        data={"target_language": "both"},
+        files={"file": ("synthetic.docx", _docx_bytes(["Synthetic CV text"]), "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+    )
+
+    assert response.status_code == 200
+    assert seen["target_language"] == "both"
+    assert response.json()["meta"]["target_language"] == "both"
+
+
+def test_empty_extraction_is_structured_error(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from types import SimpleNamespace
+
+    from app.api.v1 import cv as cv_api
+    from app.schemas.cv import CvSections
+
+    monkeypatch.setattr(
+        cv_api,
+        "extract_cv_sections",
+        lambda *_args, **_kwargs: _async_value(
+            SimpleNamespace(normalized_text="", sections=CvSections())
+        ),
+    )
+    response = client.post(
+        "/v1/cv/extract?mode=local",
+        files={"file": ("empty.pdf", b"synthetic", "application/pdf")},
+    )
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+def test_extract_and_analyze_rejects_empty_sections_before_analysis(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from types import SimpleNamespace
+
+    from app.api.v1 import cv as cv_api
+    from app.pipeline import analyze as analyze_pipeline
+    from app.schemas.cv import CvSections
+
+    async def empty_extraction(*_args, **_kwargs):
+        return SimpleNamespace(normalized_text="Synthetic PDF text", sections=CvSections())
+
+    def fail_if_analyzed(*_args, **_kwargs):
+        raise AssertionError("analysis must not run without extracted sections")
+
+    monkeypatch.setattr(cv_api, "extract_cv_sections", empty_extraction)
+    monkeypatch.setattr(analyze_pipeline, "run_cv_analyze", fail_if_analyzed)
+    response = client.post(
+        "/v1/cv/extract-and-analyze?industry_slug=ai_software",
+        files={"file": ("synthetic.pdf", b"synthetic", "application/pdf")},
+    )
+
+    assert response.status_code == 422
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["error"]["code"] == "validation_error"
+
+
+async def _async_value(value):
+    return value
+
+
+def test_unexpected_extraction_error_is_structured_json(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.api.v1 import cv as cv_api
+
+    async def fail_extraction(*_args, **_kwargs):
+        raise RuntimeError("private parser detail")
+
+    monkeypatch.setattr(cv_api, "extract_cv_sections", fail_extraction)
+    response = client.post(
+        "/v1/cv/extract?mode=local",
+        files={"file": ("synthetic.pdf", b"synthetic", "application/pdf")},
+    )
+
+    assert response.status_code == 500
+    assert response.headers["content-type"].startswith("application/json")
+    assert response.json()["error"]["code"] == "internal_error"
+    assert "private parser detail" not in response.text
 
 
 def test_extract_ai_mode_passes_selected_model(
