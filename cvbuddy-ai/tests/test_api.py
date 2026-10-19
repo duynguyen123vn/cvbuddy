@@ -225,6 +225,11 @@ def test_production_ready_succeeds_only_with_complete_config(
     assert response.status_code == 200
     assert response.json()["version"] == "1.2.3"
     assert response.json()["commit"] == "c" * 40
+    assert response.json()["provider"] == "groq"
+    assert response.json()["mockDisabled"] is True
+    assert response.json()["groqKeyConfigured"] is True
+    assert response.json()["internalAuthConfigured"] is True
+    assert response.json()["modelsConfigured"] is True
     assert "synthetic-key" not in response.text
     assert "z" * 40 not in response.text
 

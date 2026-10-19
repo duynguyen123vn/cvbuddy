@@ -49,7 +49,7 @@ def health() -> dict[str, str]:
 
 
 @app.get("/ready")
-def ready() -> dict[str, str]:
+def ready() -> dict[str, object]:
     if settings.readiness_errors():
         raise HTTPException(status_code=503, detail="Service is not ready.")
     return {
@@ -57,4 +57,17 @@ def ready() -> dict[str, str]:
         "service": "cvbuddy-ai",
         "version": settings.app_version,
         "commit": settings.app_commit,
+        "provider": settings.llm_provider.strip().lower(),
+        "mockDisabled": not settings.mock_llm and settings.llm_provider.strip().lower() != "mock",
+        "groqKeyConfigured": bool(settings.groq_api_key.strip()),
+        "internalAuthConfigured": len(settings.ai_internal_api_key.strip()) >= 32,
+        "modelsConfigured": all(
+            value.strip()
+            for value in (
+                settings.groq_model,
+                settings.groq_extract_model,
+                settings.groq_analyze_model,
+                settings.groq_fallback_model,
+            )
+        ),
     }
