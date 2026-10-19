@@ -41,8 +41,12 @@ explicitly configured: `APP_VERSION`, `APP_COMMIT`, `LLM_PROVIDER=groq`,
 `MOCK_LLM=false`, `GROQ_API_KEY`, `AI_INTERNAL_API_KEY` (at least 32 characters),
 `API_PREFIX=/v1`, all four `GROQ_*_MODEL` values,
 `AI_SCHEMA_VERSION=ai-response-v1`, and `AI_PROMPT_VERSION`. Liveness at
-`/health` is public and does not call Groq. Readiness is public and returns no
-configuration values or secrets. Every `/v1/*` request in production requires
+`/health` is public and does not call Groq. Readiness is public and returns the
+provider name and boolean configuration indicators (`mockDisabled`,
+`groqKeyConfigured`, `internalAuthConfigured`, and `modelsConfigured`) without
+returning configuration values or secrets. It also returns the app version and
+deployed commit SHA; `APP_VERSION` is the human-readable release version while
+`APP_COMMIT` identifies the exact release commit. Every `/v1/*` request in production requires
 `X-AI-Internal-Key`; an absent or invalid key is rejected before route/provider
 execution. Authenticated `/v1/*` traffic is limited to 60 requests per minute
 per internal key per worker by default. This in-memory limit is not shared
