@@ -34,6 +34,27 @@ structured `meta` object with `source`, `provider`, `model`, `schemaVersion`,
 `promptVersion`, and `latencyMs`. Errors use a stable `error.code` and generic
 public message; validation responses do not echo submitted values.
 
+## Production Gate
+
+Production startup and `/ready` fail closed unless all required values are
+explicitly configured: `APP_VERSION`, `APP_COMMIT`, `LLM_PROVIDER=groq`,
+`MOCK_LLM=false`, `GROQ_API_KEY`, `AI_INTERNAL_API_KEY` (at least 32 characters),
+`API_PREFIX=/v1`, all four `GROQ_*_MODEL` values,
+`AI_SCHEMA_VERSION=ai-response-v1`, and `AI_PROMPT_VERSION`. Liveness at
+`/health` is public and does not call Groq. Readiness is public and returns no
+configuration values or secrets. Every `/v1/*` request in production requires
+`X-AI-Internal-Key`; an absent or invalid key is rejected before route/provider
+execution. Authenticated `/v1/*` traffic is limited to 60 requests per minute
+per internal key per worker by default. This in-memory limit is not shared
+between workers/instances; use a shared gateway or Redis limiter when scaling.
+
+Application logs are JSON and correlate requests with `request_id`. They must
+not contain request bodies, CV text, prompts, provider response bodies, API
+keys, internal keys, JWTs, or arbitrary headers. Provider failure errors expose
+only stable codes: `authentication_required`, `provider_unavailable`,
+`provider_timeout`, `provider_rate_limited`, `malformed_provider_response`,
+`unsupported_schema`, `mock_prohibited`, and `request_rate_limited`.
+
 ### `POST /v1/cv/analyze`
 
 Input shape is represented by `AnalyzeCvRequest`.

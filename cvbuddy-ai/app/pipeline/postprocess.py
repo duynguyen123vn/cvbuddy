@@ -298,6 +298,15 @@ def parse_analyze_response(data: dict, request: AnalyzeCvRequest) -> AnalyzeCvRe
     try:
         parsed = AnalyzeCvResponse.model_validate(normalized)
     except ValidationError as exc:
-        logger.warning("Invalid LLM JSON: %s", exc)
-        raise
+        logger.warning(
+            "Provider output did not match analysis schema",
+            extra={"event": "unsupported_schema"},
+        )
+        from app.services.errors import LLMUpstreamError
+
+        raise LLMUpstreamError(
+            status_code=502,
+            message="Provider output did not match the analysis schema",
+            code="unsupported_schema",
+        ) from exc
     return apply_rule_overlay(parsed, request)

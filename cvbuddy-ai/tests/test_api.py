@@ -18,6 +18,8 @@ def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+    assert r.json()["version"]
+    assert "commit" in r.json()
     assert r.headers["x-request-id"]
 
 
@@ -29,14 +31,23 @@ def test_request_id_is_returned_and_reused(client: TestClient) -> None:
 
 def test_production_gate_requires_internal_key(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     from app.core.config import settings
+    from app.pipeline import analyze as analyze_pipeline
+
+    def fail_if_called(**_kwargs):
+        raise AssertionError("Provider must not be called before internal authentication")
 
     monkeypatch.setattr(settings, "app_env", "production")
-    monkeypatch.setattr(settings, "ai_internal_key", "test-internal-secret")
+    monkeypatch.setattr(settings, "ai_internal_api_key", "test-internal-secret")
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", fail_if_called)
 
     denied = client.get("/v1/industries")
     assert denied.status_code == 401
     assert denied.json()["error"]["code"] == "authentication_required"
     assert denied.headers["X-Request-ID"] == denied.json()["error"]["requestId"]
+
+    analyze_body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
+    denied_analysis = client.post("/v1/cv/analyze", json=analyze_body)
+    assert denied_analysis.status_code == 401
 
     wrong_key = client.get(
         "/v1/industries",
@@ -49,6 +60,36 @@ def test_production_gate_requires_internal_key(client: TestClient, monkeypatch: 
         headers={"X-AI-Internal-Key": "test-internal-secret"},
     )
     assert allowed.status_code == 200
+
+
+def test_production_rate_limit_is_keyed_and_returns_retry_after(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    import logging
+
+    from app.core.config import settings
+
+    caplog.set_level(logging.INFO)
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "ai_internal_api_key", "r" * 40)
+    monkeypatch.setattr(settings, "ai_rate_limit_per_minute", 1)
+    headers = {"X-AI-Internal-Key": "r" * 40}
+
+    first = client.get("/v1/industries", headers=headers)
+    second = client.get("/v1/industries", headers=headers)
+
+    assert first.status_code == 200
+    assert second.status_code == 429
+    assert second.json()["error"]["code"] == "request_rate_limited"
+    assert second.headers["Retry-After"]
+    assert "r" * 40 not in second.text
+    assert "r" * 40 not in caplog.text
+    assert any(
+        getattr(record, "request_id", None) == second.headers["X-Request-ID"]
+        for record in caplog.records
+    )
 
 
 def test_legacy_ai_alias_is_removed(client: TestClient) -> None:
@@ -67,11 +108,125 @@ def test_production_config_fails_closed() -> None:
         llm_provider="groq",
         groq_api_key="",
         mock_llm=True,
-        ai_internal_key="",
+        ai_internal_api_key="",
     )
 
-    with pytest.raises(RuntimeError, match="GROQ_API_KEY is required"):
+    with pytest.raises(RuntimeError, match="GROQ_API_KEY"):
         config.validate_production_config()
+
+
+def test_production_config_requires_every_explicit_value() -> None:
+    from app.core.config import Settings
+
+    config = Settings(
+        _env_file=None,
+        app_env="production",
+        app_version="1.2.3",
+        app_commit="a" * 40,
+        llm_provider="groq",
+        groq_api_key="fake-key-for-config-test",
+        groq_model="qwen/qwen3.8-27b",
+        groq_extract_model="qwen/qwen3.8-27b",
+        groq_analyze_model="qwen/qwen3.8-27b",
+        groq_fallback_model="openai/gpt-oss-120b",
+        mock_llm=False,
+        ai_internal_api_key="x" * 40,
+        ai_schema_version="ai-response-v1",
+        ai_prompt_version="test-prompts-v1",
+        api_prefix="/v1",
+    )
+    assert config.readiness_errors() == []
+
+
+def test_production_environment_variable_names_are_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import Settings
+
+    environment = {
+        "APP_ENV": "production",
+        "APP_VERSION": "1.2.3",
+        "APP_COMMIT": "b" * 40,
+        "LLM_PROVIDER": "groq",
+        "MOCK_LLM": "false",
+        "GROQ_API_KEY": "synthetic-groq-test-key",
+        "AI_INTERNAL_API_KEY": "y" * 40,
+        "API_PREFIX": "/v1",
+        "GROQ_MODEL": "qwen/qwen3.8-27b",
+        "GROQ_EXTRACT_MODEL": "qwen/qwen3.8-27b",
+        "GROQ_ANALYZE_MODEL": "qwen/qwen3.8-27b",
+        "GROQ_FALLBACK_MODEL": "openai/gpt-oss-120b",
+        "AI_SCHEMA_VERSION": "ai-response-v1",
+        "AI_PROMPT_VERSION": "test-prompts-v1",
+    }
+    for key, value in environment.items():
+        monkeypatch.setenv(key, value)
+    config = Settings(_env_file=None)
+    assert config.ai_internal_api_key == "y" * 40
+    assert config.readiness_errors() == []
+
+
+def test_mock_provider_is_rejected_in_production(monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import settings
+    from app.services.errors import MockProhibitedError
+    from app.services.llm import get_llm_service
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr(settings, "llm_provider", "mock")
+    monkeypatch.setattr(settings, "mock_llm", True)
+    with pytest.raises(MockProhibitedError):
+        get_llm_service()
+
+
+def test_ready_endpoint_is_safe_and_respects_config(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "app_env", "development")
+    monkeypatch.setattr(settings, "llm_provider", "mock")
+    monkeypatch.setattr(settings, "mock_llm", True)
+    monkeypatch.setattr(settings, "ai_internal_api_key", "do-not-return-this-secret")
+    response = client.get("/ready")
+    assert response.status_code == 200
+    assert response.json()["status"] == "ready"
+    assert "do-not-return-this-secret" not in response.text
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    response = client.get("/ready")
+    assert response.status_code == 503
+    assert "do-not-return-this-secret" not in response.text
+
+
+def test_production_ready_succeeds_only_with_complete_config(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app import main
+    from app.core.config import Settings
+
+    production = Settings(
+        _env_file=None,
+        app_env="production",
+        app_version="1.2.3",
+        app_commit="c" * 40,
+        llm_provider="groq",
+        groq_api_key="synthetic-key",
+        groq_model="qwen/qwen3.8-27b",
+        groq_extract_model="qwen/qwen3.8-27b",
+        groq_analyze_model="qwen/qwen3.8-27b",
+        groq_fallback_model="openai/gpt-oss-120b",
+        mock_llm=False,
+        ai_internal_api_key="z" * 40,
+        ai_schema_version="ai-response-v1",
+        ai_prompt_version="test-prompts-v1",
+        api_prefix="/v1",
+    )
+    monkeypatch.setattr(main, "settings", production)
+
+    response = client.get("/ready")
+
+    assert response.status_code == 200
+    assert response.json()["version"] == "1.2.3"
+    assert response.json()["commit"] == "c" * 40
+    assert "synthetic-key" not in response.text
+    assert "z" * 40 not in response.text
 
 
 def test_validation_errors_do_not_echo_request_data(client: TestClient) -> None:
@@ -92,7 +247,7 @@ def test_fake_provider_response_has_metadata(client: TestClient, monkeypatch: py
 
     class FakeProvider:
         use_mock = False
-        provider_name = "fake-provider"
+        provider_name = "groq"
         model_name = "fixture-model"
 
         async def generate_json(self, **_kwargs) -> dict:
@@ -120,10 +275,11 @@ def test_fake_provider_response_has_metadata(client: TestClient, monkeypatch: py
 
     assert response.status_code == 200
     metadata = response.json()["meta"]
-    assert metadata["source"] == "fake-provider"
-    assert metadata["provider"] == "fake-provider"
+    assert metadata["source"] == "groq"
+    assert metadata["provider"] == "groq"
     assert metadata["model"] == "fixture-model"
     assert metadata["schemaVersion"]
+    assert metadata["schemaVersion"] == "ai-response-v1"
     assert metadata["promptVersion"]
     assert isinstance(metadata["latencyMs"], (int, float))
     assert response.headers["X-Request-ID"]
@@ -153,6 +309,76 @@ def test_provider_error_is_sanitized(client: TestClient, monkeypatch: pytest.Mon
     assert response.status_code == 502
     assert response.json()["error"]["code"] == "provider_unavailable"
     assert "secret provider payload" not in response.text
+    assert response.headers["X-Request-ID"]
+
+
+def test_provider_rate_limit_has_stable_code_and_retry_after(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.core.config import settings
+    from app.pipeline import analyze as analyze_pipeline
+    from app.services.errors import LLMQuotaError
+
+    class RateLimitedFakeProvider:
+        use_mock = False
+        provider_name = "groq"
+        model_name = "fixture-model"
+
+        async def generate_json(self, **_kwargs) -> dict:
+            raise LLMQuotaError(message="sensitive provider response", retry_after_seconds=9)
+
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "fake-test-key")
+    monkeypatch.setattr(settings, "mock_llm", False)
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: RateLimitedFakeProvider())
+    body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
+
+    response = client.post("/v1/cv/analyze", json=body)
+
+    assert response.status_code == 429
+    assert response.json()["error"]["code"] == "provider_rate_limited"
+    assert response.headers["Retry-After"] == "9"
+    assert "sensitive provider response" not in response.text
+
+
+@pytest.mark.parametrize(
+    ("code", "status"),
+    [
+        ("provider_timeout", 504),
+        ("malformed_provider_response", 502),
+        ("unsupported_schema", 502),
+    ],
+)
+def test_provider_error_taxonomy(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    code: str,
+    status: int,
+) -> None:
+    from app.core.config import settings
+    from app.pipeline import analyze as analyze_pipeline
+    from app.services.errors import LLMUpstreamError
+
+    class FailingFakeProvider:
+        use_mock = False
+        provider_name = "groq"
+        model_name = "fixture-model"
+
+        async def generate_json(self, **_kwargs) -> dict:
+            raise LLMUpstreamError(status_code=None, message="sensitive fake payload", code=code)
+
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "groq_api_key", "fake-test-key")
+    monkeypatch.setattr(settings, "mock_llm", False)
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: FailingFakeProvider())
+    body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
+
+    response = client.post("/v1/cv/analyze", json=body)
+
+    assert response.status_code == status
+    assert response.json()["error"]["code"] == code
+    assert "sensitive fake payload" not in response.text
     assert response.headers["X-Request-ID"]
 
 

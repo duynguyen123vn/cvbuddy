@@ -7,7 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.services.errors import LLMQuotaError, LLMUpstreamError
+from app.services.errors import LLMQuotaError, LLMUpstreamError, MockProhibitedError
 
 logger = logging.getLogger(__name__)
 
@@ -64,21 +64,32 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(LLMUpstreamError)
     async def handle_provider_error(request: Request, exc: LLMUpstreamError) -> JSONResponse:
+        public_errors = {
+            "provider_timeout": (504, "The AI provider timed out."),
+            "malformed_provider_response": (502, "The AI provider returned an invalid response."),
+            "unsupported_schema": (502, "The AI provider response did not match the supported schema."),
+            "provider_unavailable": (502, "The AI provider is temporarily unavailable."),
+        }
+        status, message = public_errors.get(exc.code, public_errors["provider_unavailable"])
         logger.warning(
-            "AI provider request failed: request_id=%s upstream_status=%s",
-            getattr(request.state, "request_id", ""),
-            exc.status_code,
+            "AI provider request failed",
+            extra={
+                "event": "provider_error",
+                "upstream_status": exc.status_code,
+                "error_code": exc.code,
+            },
         )
-        return _error_response(
-            request, 502, "provider_unavailable", "The AI provider is temporarily unavailable."
-        )
+        return _error_response(request, status, exc.code, message)
+
+    @app.exception_handler(MockProhibitedError)
+    async def handle_mock_prohibited(request: Request, _exc: MockProhibitedError) -> JSONResponse:
+        return _error_response(request, 503, "mock_prohibited", "Mock inference is disabled in production.")
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         logger.error(
-            "Unhandled API error: request_id=%s exception_type=%s",
-            getattr(request.state, "request_id", ""),
-            type(exc).__name__,
+            "Unhandled API error",
+            extra={"event": "internal_error", "exception_type": type(exc).__name__},
         )
         return _error_response(
             request, 500, "internal_error", "The request could not be completed."

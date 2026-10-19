@@ -14,7 +14,6 @@ from app.schemas.cv import (
     LanguageMode,
     LlmModel,
 )
-from app.services.errors import LLMQuotaError, LLMUpstreamError
 
 router = APIRouter(prefix="/cv")
 
@@ -66,17 +65,6 @@ async def analyze_cv(body: AnalyzeCvRequest) -> AnalyzeCvResponse:
             source=provider,
             latency_ms=(perf_counter() - started) * 1000,
         )
-    except LLMQuotaError as exc:
-        headers = {}
-        if exc.retry_after_seconds is not None:
-            headers["Retry-After"] = str(exc.retry_after_seconds)
-        raise HTTPException(
-            status_code=429,
-            detail="LLM quota exceeded. Please retry later.",
-            headers=headers,
-        ) from exc
-    except LLMUpstreamError as exc:
-        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
     except IndustryContextError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -113,10 +101,6 @@ async def extract_cv(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    except LLMQuotaError as exc:
-        raise HTTPException(status_code=429, detail="LLM quota exceeded. Please retry later.") from exc
-    except LLMUpstreamError as exc:
-        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
 
     response = {
         "sections": result.sections.model_dump(),
@@ -130,7 +114,7 @@ async def extract_cv(
                 target_language,
                 result.sections,
             ).value,
-            "llm_model": effective_model,
+            "llm_model": result.model_name,
             "parser_source": result.parser_source,
             "local_quality_score": result.quality.score,
             "fallback_reason": result.fallback_reason,
@@ -148,12 +132,11 @@ async def extract_cv(
     }
     if debug:
         response["normalized_text_preview"] = result.normalized_text[:2000]
-    is_ai_provider = result.parser_source == "ai"
     return attach_provider_metadata(
         response,
-        provider="groq" if is_ai_provider else "local",
-        model=effective_model if is_ai_provider else "local",
-        source=result.parser_source,
+        provider=result.provider,
+        model=result.model_name,
+        source=(result.provider if result.provider in {"groq", "mock"} else result.parser_source),
         latency_ms=(perf_counter() - started) * 1000,
     )
 
@@ -209,16 +192,5 @@ async def extract_and_analyze(
             source=provider,
             latency_ms=(perf_counter() - started) * 1000,
         )
-    except LLMQuotaError as exc:
-        headers = {}
-        if exc.retry_after_seconds is not None:
-            headers["Retry-After"] = str(exc.retry_after_seconds)
-        raise HTTPException(
-            status_code=429,
-            detail="LLM quota exceeded. Please retry later.",
-            headers=headers,
-        ) from exc
-    except LLMUpstreamError as exc:
-        raise HTTPException(status_code=502, detail="AI provider unavailable.") from exc
     except IndustryContextError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

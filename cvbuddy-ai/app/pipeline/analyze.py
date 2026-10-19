@@ -9,7 +9,7 @@ from app.core.config import settings
 from app.pipeline.context_matrix import ContextMatrixBuilder
 from app.pipeline.postprocess import parse_analyze_response
 from app.schemas.cv import AnalyzeCvRequest, AnalyzeCvResponse
-from app.services.llm import LLMService, get_llm_service
+from app.services.llm import LLMService, ensure_mock_allowed, get_llm_service
 from app.services.errors import LLMQuotaError, LLMUpstreamError
 from app.services.mock_llm import mock_analyze_cv
 
@@ -204,6 +204,7 @@ async def run_cv_analyze(
     if requested_model is None:
         requested_model = settings.groq_analyze_model
     service = llm_service or get_llm_service(model_name=requested_model)
+    ensure_mock_allowed(service)
     if service.use_mock:
         raw = mock_analyze_cv(request)
         result = parse_analyze_response(raw, request)
@@ -235,8 +236,8 @@ async def run_cv_analyze(
         ):
             raise
         logger.warning(
-            "Primary Groq analysis model failed; retrying with %s",
-            settings.groq_fallback_model,
+            "Primary Groq analysis model failed; retrying with configured fallback",
+            extra={"event": "provider_fallback", "model": settings.groq_fallback_model},
         )
         service = get_llm_service(model_name=settings.groq_fallback_model)
         raw = await service.generate_json(
@@ -254,7 +255,10 @@ async def run_cv_analyze(
             reasons.append("wrong output language")
         if generic_feedback:
             reasons.append("generic feedback without evidence")
-        logger.warning("LLM response quality issue (%s); retrying once", ", ".join(reasons))
+        logger.warning(
+            "LLM response quality issue; retrying once",
+            extra={"event": "provider_quality_retry"},
+        )
         if (
             language_mismatch
             and llm_service is None

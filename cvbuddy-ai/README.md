@@ -7,7 +7,7 @@ FastAPI service for lossless CV extraction, structured analysis, translation, an
 - Python 3.12
 - FastAPI and Pydantic v2
 - PyMuPDF/python-docx for document extraction
-- Groq with Qwen 3.6 27B as the primary extraction/analysis model and GPT OSS 120B as fallback
+- Groq with Qwen 3.8 27B as the primary extraction/analysis model and GPT OSS 120B as fallback
 
 ## Start
 
@@ -23,7 +23,8 @@ cd E:\Project\cvbuddy-ai
 ```
 
 - API docs: http://localhost:8001/docs
-- Health: http://localhost:8001/health
+- Liveness: http://localhost:8001/health
+- Readiness: http://localhost:8001/ready
 
 The sample frontend in `E:\Project\cvbuddy-web` is configured to use port `8001`.
 
@@ -39,19 +40,34 @@ GROQ_EXTRACT_MODEL=qwen/qwen3.8-27b
 GROQ_ANALYZE_MODEL=qwen/qwen3.8-27b
 GROQ_FALLBACK_MODEL=openai/gpt-oss-120b
 MOCK_LLM=false
+APP_ENV=development
+APP_VERSION=0.1.0
+APP_COMMIT=local
+API_PREFIX=/v1
+AI_RATE_LIMIT_PER_MINUTE=60
+AI_INTERNAL_API_KEY=
+AI_SCHEMA_VERSION=ai-response-v1
+AI_PROMPT_VERSION=cv-prompts-v1
 ```
 
-API keys remain in the backend `.env`; never expose them to the frontend.
+In production, set every variable above explicitly in the FastAPI secret/config store.
+Set `APP_COMMIT` to the deployed Git SHA. Do not copy the internal key or Groq key
+to a browser bundle, Git, logs, or chat. `/ready` returns 200 only when the
+production provider, keys, model IDs, schema/prompt versions, and mock mode pass
+validation. `/health` is liveness-only and never calls Groq.
+The API also applies a per-internal-key, per-process limit (default 60 requests
+per minute). Use a shared gateway/Redis limiter before scaling to multiple
+workers or instances.
 
 ## CV Flow
 
 ```text
 PDF/DOCX
   -> PyMuPDF/python-docx text blocks
-  -> Groq Qwen 3.6 27B section parsing when mode=ai
+  -> Groq Qwen 3.8 27B section parsing when mode=ai
   -> structured_document + coverage audit
   -> industry validation
-  -> Groq Qwen 3.6 27B analysis, with GPT OSS 120B fallback
+  -> Groq Qwen 3.8 27B analysis, with GPT OSS 120B fallback
   -> grounded JSON response
 ```
 
@@ -68,6 +84,7 @@ The web UI uses `POST /v1/cv/extract` followed by `POST /v1/cv/analyze`.
 | Method | Path | Description |
 | --- | --- | --- |
 | GET | `/health` | Service health |
+| GET | `/ready` | Safe config readiness |
 | GET | `/v1/models` | Provider and installed model catalog |
 | GET | `/v1/industries` | Industry/vertical catalog |
 | POST | `/v1/cv/extract` | Extract sections, source blocks, and coverage |

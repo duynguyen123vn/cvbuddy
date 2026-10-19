@@ -3,8 +3,9 @@ from app.schemas.portfolio import (
     PortfolioSuggestRequest,
     PortfolioSuggestResponse,
 )
-from app.services.llm import LLMService, get_llm_service
+from app.services.llm import LLMService, ensure_mock_allowed, get_llm_service
 from app.services.mock_llm import mock_portfolio_suggest
+from app.services.errors import LLMUpstreamError
 
 
 async def run_portfolio_suggest(
@@ -13,6 +14,7 @@ async def run_portfolio_suggest(
     llm_service: LLMService | None = None,
 ) -> PortfolioSuggestResponse:
     service = llm_service or get_llm_service()
+    ensure_mock_allowed(service)
     if service.use_mock:
         return mock_portfolio_suggest(request)
 
@@ -40,6 +42,16 @@ async def run_portfolio_suggest(
         system_instruction=system,
         user_message=json.dumps(payload, ensure_ascii=False),
     )
+    required_text_fields = (
+        "activity_summary_vi", "activity_summary_en",
+        "suggested_cv_bullet_vi", "suggested_cv_bullet_en",
+    )
+    if any(not isinstance(raw.get(field), str) for field in required_text_fields):
+        raise LLMUpstreamError(
+            status_code=502,
+            message="Provider output did not match the portfolio schema",
+            code="unsupported_schema",
+        )
     return PortfolioSuggestResponse(
         activity_summary_vi=raw.get("activity_summary_vi", ""),
         activity_summary_en=raw.get("activity_summary_en", ""),
@@ -48,7 +60,10 @@ async def run_portfolio_suggest(
         action_verbs=raw.get("action_verbs", []),
         industry_keywords=raw.get("industry_keywords", []),
         confidence=float(raw.get("confidence", 0.7)),
-        meta={"source": getattr(service, "provider_name", "groq")},
+        meta={
+            "source": getattr(service, "provider_name", "groq"),
+            "model": getattr(service, "model_name", "unknown"),
+        },
     )
 
 

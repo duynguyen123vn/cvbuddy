@@ -10,7 +10,7 @@ import re
 import httpx
 
 from app.core.config import settings
-from app.services.errors import LLMQuotaError, LLMUpstreamError
+from app.services.errors import LLMQuotaError, LLMUpstreamError, MockProhibitedError
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +19,15 @@ class GroqService:
     provider_name = "groq"
 
     def __init__(self, model_name: str | None = None) -> None:
-        self.model_name = model_name or settings.groq_analyze_model
+        self.model_name = model_name or settings.groq_model
         self.use_mock = settings.use_mock_llm
         self._api_key = settings.groq_api_key.strip()
         self._base_url = "https://api.groq.com/openai/v1"
 
     async def generate_json(self, *, system_instruction: str, user_message: str) -> dict:
         if self.use_mock:
+            if settings.is_production:
+                raise MockProhibitedError()
             raise RuntimeError("generate_json called while MOCK_LLM is enabled")
 
         headers = {"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
@@ -51,41 +53,69 @@ class GroqService:
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 r = await client.post(f"{self._base_url}/chat/completions", headers=headers, json=payload)
+        except httpx.TimeoutException as exc:
+            raise LLMUpstreamError(
+                status_code=None,
+                message="Provider request timed out",
+                code="provider_timeout",
+            ) from exc
         except httpx.HTTPError as exc:
-            raise LLMUpstreamError(status_code=None, message=f"Groq network error: {exc}") from exc
+            raise LLMUpstreamError(status_code=None, message="Provider network request failed") from exc
 
         if r.status_code == 429:
             # Groq rate limit / quota. We map to quota error used by API handlers.
             retry_after = None
             if "retry-after" in r.headers:
                 try:
-                    retry_after = math.ceil(float(r.headers["retry-after"]))
-                except ValueError:
+                    parsed_retry_after = float(r.headers["retry-after"])
+                    if math.isfinite(parsed_retry_after) and parsed_retry_after >= 0:
+                        retry_after = min(math.ceil(parsed_retry_after), 3600)
+                except (ValueError, OverflowError):
                     retry_after = None
-            raise LLMQuotaError(message=r.text, retry_after_seconds=retry_after)
+            raise LLMQuotaError(message="Provider rate limited request", retry_after_seconds=retry_after)
 
         if r.status_code >= 400:
-            logger.error(
-                "Groq request failed: model=%s status=%s response=%s",
-                self.model_name,
-                r.status_code,
-                r.text[:1000],
+            error_code = "provider_timeout" if r.status_code in {408, 504} else "provider_unavailable"
+            logger.warning(
+                "Provider returned an error status",
+                extra={"event": "provider_http_error", "model": self.model_name, "upstream_status": r.status_code},
             )
-            raise LLMUpstreamError(status_code=r.status_code, message=r.text)
+            raise LLMUpstreamError(
+                status_code=r.status_code,
+                message="Provider returned an error status",
+                code=error_code,
+            )
 
-        data = r.json()
-        content = (
-            data.get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
-        )
         try:
-            return _parse_json_loose(content)
+            data = r.json()
+            content = data["choices"][0]["message"]["content"]
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise LLMUpstreamError(
+                status_code=502,
+                message="Provider response did not match the expected format",
+                code="malformed_provider_response",
+            ) from exc
+        if not isinstance(content, str):
+            raise LLMUpstreamError(
+                status_code=502,
+                message="Provider response content was not text",
+                code="malformed_provider_response",
+            )
+        try:
+            parsed = _parse_json_loose(content)
         except json.JSONDecodeError as exc:
             raise LLMUpstreamError(
                 status_code=502,
-                message=f"Groq model {self.model_name} returned invalid JSON",
+                message="Provider response was not valid JSON",
+                code="malformed_provider_response",
             ) from exc
+        if not isinstance(parsed, dict):
+            raise LLMUpstreamError(
+                status_code=502,
+                message="Provider response JSON was not an object",
+                code="malformed_provider_response",
+            )
+        return parsed
 
 
 def _parse_json_loose(text: str) -> dict:
@@ -105,6 +135,5 @@ def _parse_json_loose(text: str) -> dict:
                 parsed_objects.append(candidate)
         if parsed_objects:
             return parsed_objects[-1]
-        logger.error("Failed to parse JSON from Groq: %s", text[:500])
         raise
 
