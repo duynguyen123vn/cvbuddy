@@ -175,7 +175,7 @@ class ProviderMetadata(BaseModel):
     source: str = "unknown"
     provider: str = "unknown"
     model: str = "unknown"
-    schemaVersion: str = "1.0.0"
+    schemaVersion: str = "ai-response-v1"
     promptVersion: str = "cv-prompts-v1"
     latencyMs: float = 0.0
 

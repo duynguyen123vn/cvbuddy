@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from difflib import SequenceMatcher
 from enum import StrEnum
 
-from app.pipeline.ai_extract import run_ai_extract_sections
+from app.pipeline.ai_extract import AiExtractResult, run_ai_extract_sections
 from app.pipeline.preprocess import (
     compute_local_metrics,
     DocumentExtractResult,
@@ -17,6 +17,7 @@ from app.pipeline.preprocess import (
     split_into_sections,
 )
 from app.pipeline.structured_extract import build_structured_document
+from app.core.config import settings
 from app.schemas.cv import (
     CvSections,
     CvStructuredDocument,
@@ -78,6 +79,8 @@ class ExtractResult:
     target_language: TargetLanguage
     structured_document: CvStructuredDocument
     coverage: ExtractionCoverage
+    provider: str = "local"
+    model_name: str = "local"
 
 
 def assess_parse_quality(sections: CvSections, normalized_text: str) -> ParseQuality:
@@ -251,6 +254,8 @@ async def extract_cv_sections(
 
     sections = local_sections
     parser_source = "local"
+    parser_provider = "local"
+    model_name = "local"
     fallback_reason = "; ".join(quality.reasons)
 
     should_use_ai = mode == ExtractMode.AI or (
@@ -262,11 +267,19 @@ async def extract_cv_sections(
         fallback_reason = "; ".join(filter(None, (fallback_reason, layout_reason)))
     if should_use_ai:
         try:
-            ai_sections = await run_ai_extract_sections(
+            ai_result = await run_ai_extract_sections(
                 normalized_text,
                 target_language=target_language.value,
                 llm_model=llm_model,
             )
+            if isinstance(ai_result, AiExtractResult):
+                ai_sections = ai_result.sections
+                parser_provider = ai_result.provider
+                model_name = ai_result.model_name
+            else:
+                ai_sections = ai_result
+                parser_provider = "groq"
+                model_name = llm_model or settings.groq_extract_model
             sections, restored_count = reconcile_ai_sections(
                 ai_sections,
                 local_sections,
@@ -285,10 +298,17 @@ async def extract_cv_sections(
                     )
                 )
         except Exception as exc:  # noqa: BLE001
-            logger.warning("AI extract failed; falling back to local parser: %s", exc)
+            if settings.is_production and mode == ExtractMode.AI:
+                raise
+            logger.warning(
+                "AI extraction failed; using local parser",
+                extra={"event": "local_extraction_fallback", "exception_type": type(exc).__name__},
+            )
             parser_source = "local_fallback"
+            parser_provider = "local"
+            model_name = "local"
             sections = local_sections
-            fallback_reason = f"AI parser failed: {exc}"
+            fallback_reason = "AI extraction failed; local parser output returned."
 
     structured_document, coverage = build_structured_document(sections, document)
 
@@ -303,4 +323,6 @@ async def extract_cv_sections(
         target_language=target_language,
         structured_document=structured_document,
         coverage=coverage,
+        provider=parser_provider,
+        model_name=model_name,
     )

@@ -15,6 +15,7 @@ MODEL_LABELS = {
 async def list_models() -> dict:
     return {
         "provider": "groq",
+        "source": "groq",
         "default_model": settings.groq_analyze_model,
         "default_extract_model": settings.groq_extract_model,
         "default_analyze_model": settings.groq_analyze_model,

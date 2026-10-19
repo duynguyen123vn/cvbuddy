@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
@@ -20,7 +20,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(
     title="CVBuddy AI",
     description="Local document extraction → Groq Qwen → structured CV analysis",
-    version="0.1.0",
+    version=settings.app_version,
     lifespan=lifespan,
 )
 
@@ -40,4 +40,21 @@ install_error_handlers(app)
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "cvbuddy-ai", "env": settings.app_env}
+    return {
+        "status": "ok",
+        "service": "cvbuddy-ai",
+        "version": settings.app_version,
+        "commit": settings.app_commit,
+    }
+
+
+@app.get("/ready")
+def ready() -> dict[str, str]:
+    if settings.readiness_errors():
+        raise HTTPException(status_code=503, detail="Service is not ready.")
+    return {
+        "status": "ready",
+        "service": "cvbuddy-ai",
+        "version": settings.app_version,
+        "commit": settings.app_commit,
+    }

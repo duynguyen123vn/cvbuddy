@@ -6,6 +6,7 @@ from typing import Protocol
 
 from app.core.config import settings
 from app.services.groq import GroqService
+from app.services.errors import MockProhibitedError
 
 
 class LLMService(Protocol):
@@ -43,9 +44,16 @@ def get_llm_service(model_name: str | None = None) -> LLMService:
       - provider_name: str
     """
     provider = (settings.llm_provider or "groq").strip().lower()
+    if settings.is_production and (provider != "groq" or settings.use_mock_llm):
+        raise MockProhibitedError()
     if provider == "groq":
         return GroqService(model_name=model_name)
     if provider == "mock":
         return MockLLMService()
     raise ValueError(f"Unsupported LLM provider: {provider}")
+
+
+def ensure_mock_allowed(service: LLMService) -> None:
+    if settings.is_production and service.use_mock:
+        raise MockProhibitedError()
 

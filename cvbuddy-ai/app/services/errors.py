@@ -13,3 +13,8 @@ class LLMQuotaError(Exception):
 class LLMUpstreamError(Exception):
     status_code: int | None
     message: str
+    code: str = "provider_unavailable"
+
+
+class MockProhibitedError(Exception):
+    """Raised if mock inference is attempted while production is active."""
