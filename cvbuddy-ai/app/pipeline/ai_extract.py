@@ -68,7 +68,9 @@ async def run_ai_extract_sections(
             system_instruction=system_instruction,
             user_message=user_message,
         )
-    except (LLMQuotaError, LLMUpstreamError):
+    except LLMQuotaError:
+        raise
+    except LLMUpstreamError:
         if settings.llm_provider != "groq" or selected_model == settings.groq_fallback_model:
             raise
         logger.warning(

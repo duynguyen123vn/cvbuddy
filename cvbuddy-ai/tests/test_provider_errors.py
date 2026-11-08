@@ -76,7 +76,17 @@ async def test_malformed_provider_response_is_not_logged(monkeypatch, caplog):
 @pytest.mark.asyncio
 async def test_rate_limit_body_is_not_retained_or_logged(monkeypatch, caplog):
     FakeAsyncClient.error = None
-    FakeAsyncClient.response = FakeResponse(429, {}, {"retry-after": "7"})
+    FakeAsyncClient.response = FakeResponse(
+        429,
+        {},
+        {
+            "retry-after": "7",
+            "x-ratelimit-remaining-requests": "0",
+            "x-ratelimit-remaining-tokens": "1200",
+            "x-ratelimit-reset-requests": "1h",
+            "x-ratelimit-reset-tokens": "4s",
+        },
+    )
     monkeypatch.setattr("app.services.groq.httpx.AsyncClient", FakeAsyncClient)
 
     with pytest.raises(LLMQuotaError) as raised:
@@ -85,6 +95,36 @@ async def test_rate_limit_body_is_not_retained_or_logged(monkeypatch, caplog):
     assert raised.value.retry_after_seconds == 7
     assert "private-provider-response-marker" not in str(raised.value)
     assert "private-provider-response-marker" not in caplog.text
+    record = next(record for record in caplog.records if getattr(record, "event", None) == "provider_rate_limited")
+    assert record.rate_limit_info["remaining_requests"] == "0"
+    assert record.rate_limit_info["remaining_tokens"] == "1200"
+
+
+@pytest.mark.asyncio
+async def test_ai_extract_does_not_call_fallback_when_quota_is_exceeded(monkeypatch):
+    from app.pipeline import ai_extract
+
+    monkeypatch.setattr(settings, "app_env", "development")
+    monkeypatch.setattr(settings, "llm_provider", "groq")
+    monkeypatch.setattr(settings, "mock_llm", False)
+    requested_models: list[str] = []
+
+    class QuotaProvider:
+        use_mock = False
+
+        async def generate_json(self, **_kwargs):
+            raise LLMQuotaError(message="quota", retry_after_seconds=5)
+
+    def get_fake_service(*, model_name: str):
+        requested_models.append(model_name)
+        return QuotaProvider()
+
+    monkeypatch.setattr(ai_extract, "get_llm_service", get_fake_service)
+
+    with pytest.raises(LLMQuotaError):
+        await ai_extract.run_ai_extract_sections("Synthetic CV", llm_model="primary-test-model")
+
+    assert requested_models == ["primary-test-model"]
 
 
 @pytest.mark.asyncio
