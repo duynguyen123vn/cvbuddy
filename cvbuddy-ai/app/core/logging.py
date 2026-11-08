@@ -11,7 +11,6 @@ class SafeJsonFormatter(logging.Formatter):
         "event", "request_id", "method", "path", "status_code", "latency_ms",
         "error_code", "upstream_status", "model", "exception_type",
         "validation_error_count", "validation_errors",
-        "retry_after_seconds", "rate_limit_info",
     )
 
     def format(self, record: logging.LogRecord) -> str:

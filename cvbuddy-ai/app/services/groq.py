@@ -101,26 +101,6 @@ class GroqService:
                         retry_after = min(math.ceil(parsed_retry_after), 3600)
                 except (ValueError, OverflowError):
                     retry_after = None
-            rate_limit_info = {
-                name: r.headers[header]
-                for name, header in (
-                    ("remaining_requests", "x-ratelimit-remaining-requests"),
-                    ("remaining_tokens", "x-ratelimit-remaining-tokens"),
-                    ("reset_requests", "x-ratelimit-reset-requests"),
-                    ("reset_tokens", "x-ratelimit-reset-tokens"),
-                )
-                if header in r.headers
-            }
-            logger.warning(
-                "AI provider rate limit reached",
-                extra={
-                    "event": "provider_rate_limited",
-                    "model": self.model_name,
-                    "upstream_status": r.status_code,
-                    "retry_after_seconds": retry_after,
-                    "rate_limit_info": rate_limit_info,
-                },
-            )
             raise LLMQuotaError(message="Provider rate limited request", retry_after_seconds=retry_after)
 
         if r.status_code >= 400:
