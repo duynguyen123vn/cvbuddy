@@ -298,9 +298,29 @@ def parse_analyze_response(data: dict, request: AnalyzeCvRequest) -> AnalyzeCvRe
     try:
         parsed = AnalyzeCvResponse.model_validate(normalized)
     except ValidationError as exc:
+        safe_errors = []
+        for error in exc.errors(include_input=False, include_context=False, include_url=False)[:20]:
+            parts = []
+            for segment in error.get("loc", ()):
+                if isinstance(segment, int):
+                    parts.append("[]")
+                elif isinstance(segment, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", segment):
+                    parts.append(segment)
+                else:
+                    parts.append("?")
+            safe_errors.append(
+                {
+                    "field": ".".join(parts) or "<root>",
+                    "type": str(error.get("type", "unknown"))[:64],
+                }
+            )
         logger.warning(
             "Provider output did not match analysis schema",
-            extra={"event": "unsupported_schema"},
+            extra={
+                "event": "unsupported_schema",
+                "validation_error_count": exc.error_count(),
+                "validation_errors": safe_errors,
+            },
         )
         from app.services.errors import LLMUpstreamError
 
