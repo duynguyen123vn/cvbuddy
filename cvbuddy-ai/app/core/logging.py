@@ -10,6 +10,7 @@ class SafeJsonFormatter(logging.Formatter):
     SAFE_FIELDS = (
         "event", "request_id", "method", "path", "status_code", "latency_ms",
         "error_code", "upstream_status", "model", "exception_type",
+        "validation_error_count", "validation_errors",
     )
 
     def format(self, record: logging.LogRecord) -> str:
@@ -18,6 +19,8 @@ class SafeJsonFormatter(logging.Formatter):
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
+            "app_version": settings.app_version,
+            "app_commit": settings.app_commit,
         }
         request_id = getattr(record, "request_id", None) or request_id_context.get()
         if request_id:

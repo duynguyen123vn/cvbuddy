@@ -1,5 +1,8 @@
+import pytest
+
 from app.pipeline.postprocess import parse_analyze_response
 from app.schemas.cv import AnalyzeCvRequest, CompanyModel, CvSections, LanguageMode
+from app.services.errors import LLMUpstreamError
 
 
 def _base_raw_response() -> dict:
@@ -21,6 +24,30 @@ def _base_raw_response() -> dict:
         "company_model_feedback": "Generic feedback",
         "confidence": 0.7,
     }
+
+
+def test_schema_validation_logs_only_safe_field_and_error_type(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    private_marker = "private-model-output-marker"
+    raw = _base_raw_response()
+    raw["overall_score"] = private_marker
+    request = AnalyzeCvRequest(
+        sections=CvSections(experience=["Synthetic experience"]),
+        industry_slug="computer_science",
+    )
+
+    with pytest.raises(LLMUpstreamError) as raised:
+        parse_analyze_response(raw, request)
+
+    assert raised.value.code == "unsupported_schema"
+    record = next(
+        record
+        for record in caplog.records
+        if getattr(record, "event", None) == "unsupported_schema"
+    )
+    assert record.validation_errors == [{"field": "overall_score", "type": "int_parsing"}]
+    assert private_marker not in record.getMessage()
 
 
 def test_missing_jd_fit_is_neutralized() -> None:

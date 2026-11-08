@@ -50,17 +50,46 @@ class GroqService:
             payload["max_completion_tokens"] = 3072
         payload["response_format"] = {"type": "json_object"}
 
+        logger.info(
+            "AI provider request started",
+            extra={"event": "provider_call_started", "model": self.model_name},
+        )
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 r = await client.post(f"{self._base_url}/chat/completions", headers=headers, json=payload)
         except httpx.TimeoutException as exc:
+            logger.warning(
+                "AI provider request timed out",
+                extra={
+                    "event": "provider_call_failed",
+                    "model": self.model_name,
+                    "exception_type": "timeout",
+                },
+            )
             raise LLMUpstreamError(
                 status_code=None,
                 message="Provider request timed out",
                 code="provider_timeout",
             ) from exc
         except httpx.HTTPError as exc:
+            logger.warning(
+                "AI provider request failed",
+                extra={
+                    "event": "provider_call_failed",
+                    "model": self.model_name,
+                    "exception_type": "http_error",
+                },
+            )
             raise LLMUpstreamError(status_code=None, message="Provider network request failed") from exc
+
+        logger.info(
+            "AI provider response received",
+            extra={
+                "event": "provider_call_completed",
+                "model": self.model_name,
+                "upstream_status": r.status_code,
+            },
+        )
 
         if r.status_code == 429:
             # Groq rate limit / quota. We map to quota error used by API handlers.
