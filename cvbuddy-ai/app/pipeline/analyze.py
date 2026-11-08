@@ -228,7 +228,9 @@ async def run_cv_analyze(
             system_instruction=system,
             user_message=user_payload,
         )
-    except (LLMQuotaError, LLMUpstreamError):
+    except LLMQuotaError:
+        raise
+    except LLMUpstreamError:
         if (
             llm_service is not None
             or settings.llm_provider != "groq"

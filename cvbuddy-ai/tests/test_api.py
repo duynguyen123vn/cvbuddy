@@ -352,14 +352,17 @@ def test_provider_rate_limit_has_stable_code_and_retry_after(
         use_mock = False
         provider_name = "groq"
         model_name = "fixture-model"
+        calls = 0
 
         async def generate_json(self, **_kwargs) -> dict:
+            self.calls += 1
             raise LLMQuotaError(message="sensitive provider response", retry_after_seconds=9)
 
+    fake_provider = RateLimitedFakeProvider()
     monkeypatch.setattr(settings, "llm_provider", "groq")
     monkeypatch.setattr(settings, "groq_api_key", "fake-test-key")
     monkeypatch.setattr(settings, "mock_llm", False)
-    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: RateLimitedFakeProvider())
+    monkeypatch.setattr(analyze_pipeline, "get_llm_service", lambda **_kwargs: fake_provider)
     body = json.loads((FIXTURES / "analyze_request_sample.json").read_text(encoding="utf-8"))
 
     response = client.post("/v1/cv/analyze", json=body)
@@ -368,6 +371,7 @@ def test_provider_rate_limit_has_stable_code_and_retry_after(
     assert response.json()["error"]["code"] == "provider_rate_limited"
     assert response.headers["Retry-After"] == "9"
     assert "sensitive provider response" not in response.text
+    assert fake_provider.calls == 1
 
 
 @pytest.mark.parametrize(
