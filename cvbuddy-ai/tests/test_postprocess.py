@@ -75,6 +75,66 @@ def test_missing_jd_fit_uses_english_for_english_response() -> None:
     assert "No job description was provided" in parsed.dimensions.jd_fit.gaps[0]
 
 
+def test_object_suggested_bullets_are_normalized_to_requested_language() -> None:
+    raw = _base_raw_response()
+    raw["dimensions"]["keywords"]["suggested_bullets"] = [
+        {
+            "original_ref": "Built a small project",
+            "suggested_vi": "Xây dựng một dự án nhỏ.",
+            "suggested_en": "Built a small project.",
+        },
+        {"original_ref": "No usable suggestion"},
+    ]
+    request = AnalyzeCvRequest(
+        sections=CvSections(experience=["Built a small project"]),
+        industry_slug="computer_science",
+        language=LanguageMode.VI,
+    )
+
+    parsed = parse_analyze_response(raw, request)
+
+    assert parsed.dimensions.keywords.suggested_bullets == ["Xây dựng một dự án nhỏ."]
+
+
+def test_missing_jd_fit_is_filled_neutrally_only_without_jd() -> None:
+    raw = _base_raw_response()
+    del raw["dimensions"]["jd_fit"]
+    request = AnalyzeCvRequest(
+        sections=CvSections(experience=["Built a synthetic project"]),
+        industry_slug="computer_science",
+        language=LanguageMode.EN,
+    )
+
+    parsed = parse_analyze_response(raw, request)
+
+    assert parsed.dimensions.jd_fit.score == 60
+    assert "No job description was provided" in parsed.dimensions.jd_fit.gaps[0]
+
+
+def test_missing_jd_fit_with_provided_jd_remains_schema_error() -> None:
+    raw = _base_raw_response()
+    del raw["dimensions"]["jd_fit"]
+    request = AnalyzeCvRequest(
+        sections=CvSections(experience=["Built a synthetic project"]),
+        industry_slug="computer_science",
+        jd_extract={"role_title": "Software Engineer"},
+    )
+
+    with pytest.raises(LLMUpstreamError) as raised:
+        parse_analyze_response(raw, request)
+
+    assert raised.value.code == "unsupported_schema"
+    assert raised.value.__cause__ is None
+
+
+def test_provider_exceptions_allow_traceback_assignment() -> None:
+    error = LLMUpstreamError(status_code=502, message="safe", code="unsupported_schema")
+
+    error.__traceback__ = None
+
+    assert error.args == ("safe",)
+
+
 def test_generic_feedback_is_removed() -> None:
     raw = _base_raw_response()
     raw["dimensions"]["language"] = {

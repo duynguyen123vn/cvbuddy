@@ -21,6 +21,75 @@ def clamp_score(value: int, *, max_cap: int | None = None) -> int:
     return v
 
 
+def _normalize_provider_shape(data: dict, request: AnalyzeCvRequest) -> dict:
+    """Adapt common provider schema drift to the public response contract."""
+    normalized = dict(data)
+    dimensions = normalized.get("dimensions")
+    if not isinstance(dimensions, dict):
+        return normalized
+
+    dimensions = dict(dimensions)
+    normalized["dimensions"] = dimensions
+    keywords = dimensions.get("keywords")
+    if isinstance(keywords, dict):
+        keywords = dict(keywords)
+        dimensions["keywords"] = keywords
+        bullets = keywords.get("suggested_bullets")
+        if isinstance(bullets, list):
+            if request.language == LanguageMode.EN:
+                candidate_fields = (
+                    "suggested_en", "suggested_bullet_en", "suggested_bullet",
+                    "suggested", "bullet", "text", "content",
+                )
+            else:
+                candidate_fields = (
+                    "suggested_vi", "suggested_bullet_vi", "suggested_bullet",
+                    "suggested", "bullet", "text", "content",
+                )
+
+            normalized_bullets: list[str] = []
+            dropped = 0
+            for bullet in bullets:
+                if isinstance(bullet, str):
+                    value = bullet.strip()
+                elif isinstance(bullet, dict):
+                    value = next(
+                        (
+                            bullet[field].strip()
+                            for field in candidate_fields
+                            if isinstance(bullet.get(field), str) and bullet[field].strip()
+                        ),
+                        "",
+                    )
+                else:
+                    value = ""
+                if value:
+                    normalized_bullets.append(value)
+                else:
+                    dropped += 1
+            keywords["suggested_bullets"] = normalized_bullets
+            if dropped:
+                logger.warning(
+                    "Discarded malformed provider bullet suggestions",
+                    extra={
+                        "event": "provider_output_normalized",
+                        "field": "dimensions.keywords.suggested_bullets",
+                        "discarded_count": dropped,
+                    },
+                )
+
+    if "jd_fit" not in dimensions and request.jd_extract is None:
+        dimensions["jd_fit"] = {"score": 60, "gaps": []}
+        logger.warning(
+            "Added neutral job-fit result because no job description was provided",
+            extra={
+                "event": "provider_output_normalized",
+                "field": "dimensions.jd_fit",
+            },
+        )
+    return normalized
+
+
 _STRONG_CLAIMS = {
     "deployed": "developed",
     "launched": "built",
@@ -291,7 +360,7 @@ def apply_rule_overlay(response: AnalyzeCvResponse, request: AnalyzeCvRequest) -
 
 
 def parse_analyze_response(data: dict, request: AnalyzeCvRequest) -> AnalyzeCvResponse:
-    normalized = dict(data)
+    normalized = _normalize_provider_shape(data, request)
     normalized.setdefault("confidence", 0.65)
     normalized.setdefault("company_model_feedback", "")
     normalized.setdefault("disclaimer", "AI-assisted feedback only; not a hiring guarantee.")
@@ -328,5 +397,5 @@ def parse_analyze_response(data: dict, request: AnalyzeCvRequest) -> AnalyzeCvRe
             status_code=502,
             message="Provider output did not match the analysis schema",
             code="unsupported_schema",
-        ) from exc
+        ) from None
     return apply_rule_overlay(parsed, request)

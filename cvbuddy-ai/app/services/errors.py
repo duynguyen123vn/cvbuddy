@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
 class LLMQuotaError(Exception):
-    message: str
-    retry_after_seconds: int | None = None
+    def __init__(self, message: str, retry_after_seconds: int | None = None) -> None:
+        self.message = message
+        self.retry_after_seconds = retry_after_seconds
+        super().__init__(message)
 
 
-@dataclass(frozen=True)
 class LLMUpstreamError(Exception):
-    status_code: int | None
-    message: str
-    code: str = "provider_unavailable"
+    def __init__(
+        self,
+        status_code: int | None,
+        message: str,
+        code: str = "provider_unavailable",
+    ) -> None:
+        self.status_code = status_code
+        self.message = message
+        self.code = code
+        super().__init__(message)
 
 
 class MockProhibitedError(Exception):
